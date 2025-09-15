@@ -309,13 +309,3 @@ function setupContactForm() {
     });
 }
 
-// Quando o DOM carregar, configura o formulário
-document.addEventListener('DOMContentLoaded', function() {
-    setupContactForm();
-});
-
-// Quando o conteúdo da página for carregado
-document.addEventListener('DOMContentLoaded', function() {
-    // Chama a função para configurar o formulário de contato
-    setupContactForm();
-});

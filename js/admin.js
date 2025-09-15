@@ -206,17 +206,17 @@ function setupClientesEdicao() {
 // =============================================
 // VENDAS - Página de Dashboard
 // =============================================
-// function setupVendasDashboard() {
-//     // Efeitos de hover nas barras do gráfico
-//     document.querySelectorAll('.chart-bar').forEach(bar => {
-//         bar.addEventListener('mouseover', function() {
-//             this.style.opacity = '0.8'; // Efeito de transparência
-//         });
-//         bar.addEventListener('mouseout', function() {
-//             this.style.opacity = '1'; // Volta ao normal
-//         });
-//     });
-// }
+//.  function setupVendasDashboard() {
+//.     // Efeitos de hover nas barras do gráfico
+//.      document.querySelectorAll('.chart-bar').forEach(bar => {
+//.          bar.addEventListener('mouseover', function() {
+//.              this.style.opacity = '0.8'; // Efeito de transparência
+//.          });
+//.          bar.addEventListener('mouseout', function() {
+//.              this.style.opacity = '1'; // Volta ao normal
+//.          });
+//.     });
+//.  }
 // =============================================
 // PERFIL DO ADMIN
 // =============================================
