@@ -609,3 +609,13 @@
         width: 220px;
     }
 }
+.badge.user {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.badge.admin {
+    background: #fff3e0;
+    color: #f57c00;
+    font-weight: bold;
+}
