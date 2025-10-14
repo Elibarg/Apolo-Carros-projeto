@@ -58,6 +58,24 @@ class Router {
                     }
                     break;
 
+                case '/api/contact':
+                    if ($method == 'POST') {
+                        $data = json_decode(file_get_contents("php://input"), true);
+                        $contactController = new ContactController($this->db);
+                        $contactController->send($data);
+                    }
+                    break;
+
+                case '/api/vehicles':
+                    $vehicleController = new VehicleController($this->db);
+                    if ($method == 'GET') {
+                        $filters = $_GET;
+                        $vehicleController->list($filters);
+                    } elseif ($method == 'POST') {
+                        $this->handleProtectedRoutes($path, $method);
+                    }
+                    break;
+
                 default:
                     // Rotas protegidas por autenticação
                     $this->handleProtectedRoutes($path, $method);
@@ -83,7 +101,18 @@ class Router {
                 }
                 break;
 
-            // Rotas administrativas - Gerenciamento de usuários
+            // Rotas de veículos protegidas
+            case '/api/vehicles':
+                $user_data = $this->authMiddleware->authenticate();
+                $vehicleController = new VehicleController($this->db);
+
+                if ($method == 'POST') {
+                    $data = json_decode(file_get_contents("php://input"), true);
+                    $vehicleController->create($data);
+                }
+                break;
+
+            // Rotas administrativas
             case '/api/admin/users/create':
                 $user_data = $this->authMiddleware->requireAdmin();
                 $userController = new UserController($this->db);
@@ -117,13 +146,24 @@ class Router {
                 }
                 break;
 
-            // Rotas específicas por ID de usuário
+            // Rotas específicas por ID
             default:
-                $this->handleUserByIdRoutes($path, $method);
+                $this->handleByIdRoutes($path, $method);
         }
     }
 
-    private function handleUserByIdRoutes($path, $method) {
+    private function handleByIdRoutes($path, $method) {
+        // Padrão: /api/vehicles/{id}
+        if (preg_match('/\/api\/vehicles\/(\d+)$/', $path, $matches)) {
+            $vehicleController = new VehicleController($this->db);
+            $vehicle_id = $matches[1];
+
+            if ($method == 'GET') {
+                $vehicleController->getById($vehicle_id);
+            }
+            return;
+        }
+
         // Padrão: /api/admin/users/{id}
         if (preg_match('/\/api\/admin\/users\/(\d+)$/', $path, $matches)) {
             $user_data = $this->authMiddleware->requireAdmin();
@@ -183,7 +223,7 @@ class Router {
         Response::notFound('Rota não encontrada');
     }
 
-    // Estatísticas de usuários para dashboard
+    // ... (outros métodos permanecem iguais)
     private function getUserStats() {
         try {
             $query = "SELECT 
@@ -205,7 +245,6 @@ class Router {
         }
     }
 
-    // Limpar sessões expiradas
     private function cleanupExpiredSessions() {
         try {
             if (rand(1, 10) === 1) {
