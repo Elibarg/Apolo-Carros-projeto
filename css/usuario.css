@@ -1,8 +1,7 @@
 /* Estilos para a área do usuário */
 .user-dashboard {
-    display: flex;
-    min-height: calc(100vh - 150px);
-    padding: 2rem 0;
+    background: #f8f9fa;
+    min-height: 100vh;
 }
 
 /* ============================= */

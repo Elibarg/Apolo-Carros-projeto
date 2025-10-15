@@ -1,5 +1,5 @@
 <?php
-// Arquivo: backend/api/login.php (VERSÃO COM DETECÇÃO AUTOMÁTICA)
+// Arquivo: backend/api/login.php (VERSÃO CORRIGIDA)
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: POST");
@@ -26,17 +26,17 @@ if(!empty($data->email) && !empty($data->senha)) {
         // Iniciar sessão
         session_start();
         $_SESSION['user_id'] = $user->id;
-        $_SESSION['user_name'] = $user->nome_completo;
+        $_SESSION['user_name'] = $user->nome_completo; // CORRIGIDO: nome_completo
         $_SESSION['user_email'] = $user->email;
         $_SESSION['user_type'] = $user->tipo_usuario;
         $_SESSION['logged_in'] = true;
         
-        // DETECÇÃO AUTOMÁTICA DO CAMINHO BASE
+        // Detecção automática do caminho base
         $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
         $host = $_SERVER['HTTP_HOST'];
-        $base_path = '/Apolo-Carros-projeto'; // Ajuste conforme necessário
+        $base_path = '/Apolo-Carros-projeto';
         
-        // CORREÇÃO: Caminhos absolutos
+        // Redirecionamento
         $redirectTo = $user->tipo_usuario === 'admin' 
             ? "{$protocol}://{$host}{$base_path}/html/adm/painel_de_vendas.html" 
             : "{$protocol}://{$host}{$base_path}/html/usuario/usuario.html";
@@ -49,16 +49,11 @@ if(!empty($data->email) && !empty($data->senha)) {
                 "token" => $token,
                 "user" => array(
                     "id" => $user->id,
-                    "nome_completo" => $user->nome_completo,
+                    "nome_completo" => $user->nome_completo, // CORRIGIDO: nome_completo
                     "email" => $user->email,
                     "tipo_usuario" => $user->tipo_usuario
                 ),
-                "redirectTo" => $redirectTo,
-                "debug" => array(
-                    "base_path" => $base_path,
-                    "host" => $host,
-                    "protocol" => $protocol
-                )
+                "redirectTo" => $redirectTo
             )
         ));
     } else {
