@@ -138,6 +138,38 @@
     <footer></footer>
 
     <script>
+        // ✅ CONFIGURAÇÃO DE CAMINHOS (SEM DEPENDÊNCIA EXTERNA)
+        function getBasePath() {
+            const currentPath = window.location.pathname;
+            
+            // Verificar se está na pasta usuario
+            if (currentPath.includes('/usuario/')) {
+                return '../../';
+            } 
+            // Verificar se está na pasta adm
+            else if (currentPath.includes('/adm/')) {
+                return '../../';
+            }
+            // Verificar se está na pasta html
+            else if (currentPath.includes('/html/')) {
+                return '../';
+            }
+            // Para outras páginas (raiz)
+            else {
+                return './';
+            }
+        }
+        
+        function getComponentsPath() {
+            const basePath = getBasePath();
+            return basePath + 'components/';
+        }
+        
+        function getApiBaseUrl() {
+            const basePath = getBasePath();
+            return basePath + 'backend/api/';
+        }
+
         // Funções de debug
         function debugLocalStorage() {
             console.log('🔍 Debug do localStorage:');
@@ -231,7 +263,7 @@
             cleanupOldData();
             
             // Carregar componentes
-            loadComponents();
+
             
             // Verificar autenticação
             const userData = AuthService.getUserData();
@@ -247,32 +279,6 @@
             }
         });
 
-        function loadComponents() {
-            // Carregar header
-            fetch('../../components/header.html')
-                .then(response => response.text())
-                .then(data => {
-                    document.querySelector('header').innerHTML = data;
-                    updateHeaderForUser();
-                })
-                .catch(error => console.error('Erro ao carregar header:', error));
-
-            // Carregar nav
-            fetch('../../components/nav.html')
-                .then(response => response.text())
-                .then(data => {
-                    document.querySelector('nav').innerHTML = data;
-                })
-                .catch(error => console.error('Erro ao carregar nav:', error));
-
-            // Carregar footer
-            fetch('../../components/footer.html')
-                .then(response => response.text())
-                .then(data => {
-                    document.querySelector('footer').innerHTML = data;
-                })
-                .catch(error => console.error('Erro ao carregar footer:', error));
-        }
 
         function updateHeaderForUser() {
             const userData = AuthService.getUserData();
@@ -538,7 +544,7 @@
                 telefone: document.getElementById('phone').value
             };
             
-            // Validar dados obrigatórios
+            // ✅ VALIDAÇÕES
             if (!formData.email || !formData.nome_completo || !formData.genero || 
                 !formData.data_nascimento || !formData.cpf || !formData.cep || 
                 !formData.estado || !formData.cidade || !formData.endereco || 
@@ -547,20 +553,11 @@
                 return;
             }
             
-            // Validar email
-            if (!validateEmail(formData.email)) {
-                return;
-            }
+            if (!validateEmail(formData.email)) return;
             
-            // Validar CPF
             const cpfClean = formData.cpf.replace(/\D/g, '');
             if (cpfClean.length !== 11) {
                 showMessage('❌ CPF deve ter 11 dígitos', 'error');
-                return;
-            }
-            
-            if (!validateCPF(formData.cpf)) {
-                showMessage('❌ CPF inválido', 'error');
                 return;
             }
             
@@ -577,8 +574,12 @@
             showMessage('💾 Salvando dados...', 'info');
             
             try {
-                // Enviar dados para a API REAL
-                const response = await fetch('../../backend/api/update_user.php', {
+                // ✅ USAR CAMINHO ABSOLUTO PARA A API
+                const apiUrl = '../../backend/api/update_user.php';
+                console.log('📤 Enviando para:', apiUrl);
+                console.log('📦 Dados:', formData);
+                
+                const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -586,7 +587,17 @@
                     body: JSON.stringify(formData)
                 });
                 
-                const result = await response.json();
+                // ✅ VERIFICAR SE A RESPOSTA É JSON VÁLIDO
+                const responseText = await response.text();
+                console.log('📥 Resposta bruta:', responseText);
+                
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch (parseError) {
+                    console.error('❌ Erro ao parsear JSON:', parseError);
+                    throw new Error('Resposta inválida do servidor: ' + responseText.substring(0, 100));
+                }
                 
                 if (result.success) {
                     // Atualizar dados do usuário no localStorage
@@ -597,7 +608,7 @@
                     };
                     localStorage.setItem('user_data', JSON.stringify(updatedUserData));
                     
-                    // Salvar dados adicionais específicos do usuário
+                    // Salvar dados adicionais
                     const additionalData = {
                         gender: formData.genero,
                         birthdate: formData.data_nascimento,
@@ -610,9 +621,7 @@
                     };
                     saveUserAdditionalData(additionalData);
                     
-                    showMessage('✅ Dados salvos com sucesso no banco de dados!', 'success');
-                    
-                    console.log('📤 Dados salvos no banco:', formData);
+                    showMessage('✅ Dados salvos com sucesso!', 'success');
                     
                     // Atualizar header
                     updateHeaderForUser();
@@ -622,7 +631,7 @@
                 
             } catch (error) {
                 console.error('Erro ao salvar:', error);
-                showMessage('❌ Erro de conexão ao salvar dados', 'error');
+                showMessage('❌ Erro: ' + error.message, 'error');
             }
         }
 

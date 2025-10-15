@@ -5,20 +5,37 @@ header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
+// ✅ DESLIGAR ERROS HTML PARA EVITAR RESPOSTAS INVALIDAS
+ini_set('display_errors', 0);
+error_reporting(0);
+
 include_once '../config/database.php';
 include_once '../models/User.php';
 
-$database = new Database();
-$db = $database->getConnection();
+try {
+    $database = new Database();
+    $db = $database->getConnection();
 
-$user = new User($db);
+    if (!$db) {
+        throw new Exception("Não foi possível conectar ao banco de dados");
+    }
 
-$data = json_decode(file_get_contents("php://input"));
+    $user = new User($db);
 
-// Log para debug
-error_log("Dados recebidos para atualização: " . json_encode($data));
+    $input = file_get_contents("php://input");
+    $data = json_decode($input);
 
-if(!empty($data->user_id)) {
+    // Log para debug
+    error_log("Dados recebidos para atualização: " . $input);
+
+    if(!$data || empty($data->user_id)) {
+        http_response_code(400);
+        echo json_encode(array(
+            "success" => false, 
+            "message" => "ID do usuário não fornecido ou dados inválidos."
+        ));
+        exit;
+    }
     
     $user->id = $data->user_id;
     $user->email = $data->email ?? null;
@@ -59,11 +76,13 @@ if(!empty($data->user_id)) {
             "message" => "Não foi possível atualizar os dados."
         ));
     }
-} else {
-    http_response_code(400);
+
+} catch (Exception $e) {
+    error_log("Erro em update_user.php: " . $e->getMessage());
+    http_response_code(500);
     echo json_encode(array(
         "success" => false, 
-        "message" => "ID do usuário não fornecido."
+        "message" => "Erro interno do servidor: " . $e->getMessage()
     ));
 }
 ?>
