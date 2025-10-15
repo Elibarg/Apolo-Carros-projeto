@@ -1,219 +1,168 @@
-// js/auth-integration.js
+// Arquivo: js/auth-integration.js
 class AuthService {
-    static getBaseURL() {
-        return 'http://localhost/Apolo-Carros-projeto/backend/public/index.php';
+    static API_BASE_URL = '../backend/api/';
+
+    static async register(userData) {
+        console.log('📤 Enviando dados para:', this.API_BASE_URL + 'register.php');
+        
+        try {
+            const response = await fetch(this.API_BASE_URL + 'register.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData)
+            });
+
+            console.log('📥 Status da resposta:', response.status);
+            
+            const result = await response.json();
+            console.log('📊 Resultado:', result);
+            
+            return result;
+            
+        } catch (error) {
+            console.error('💥 Erro na requisição:', error);
+            return { 
+                success: false, 
+                message: 'Erro de conexão: ' + error.message
+            };
+        }
     }
 
     static async login(email, password) {
+        console.log('📤 Login para:', this.API_BASE_URL + 'login.php');
+        console.log('🔐 Credenciais:', { email, password: '***' });
+        
         try {
-            console.log('🔐 Tentando login...', { email });
-            
-            const response = await fetch(`${this.getBaseURL()}?route=/api/login`, {
+            const response = await fetch(this.API_BASE_URL + 'login.php', {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json'
                 },
                 body: JSON.stringify({ 
                     email: email, 
                     senha: password 
                 })
             });
+
+            console.log('📥 Status do login:', response.status);
             
-            console.log('📡 Status:', response.status);
+            const result = await response.json();
+            console.log('📊 Resultado login:', result);
+            
+            return result;
+            
+        } catch (error) {
+            console.error('💥 Erro no login:', error);
+            return { 
+                success: false, 
+                message: 'Erro de conexão: ' + error.message
+            };
+        }
+    }
+
+    static async login(email, password) {
+        console.log('📤 Login para:', this.API_BASE_URL + 'login.php');
+        
+        try {
+            const response = await fetch(this.API_BASE_URL + 'login.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    email: email, 
+                    senha: password 
+                })
+            });
+
+            console.log('📥 Status do login:', response.status);
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             
             const result = await response.json();
-            console.log('✅ Resposta completa:', result);
+            console.log('📊 Resultado login:', result);
             
             return result;
             
         } catch (error) {
-            console.error('❌ Erro completo:', error);
+            console.error('💥 Erro no login:', error);
             return { 
                 success: false, 
-                message: 'Erro de conexão: ' + error.message 
+                message: 'Erro de conexão: ' + error.message
             };
         }
     }
 
-    static async register(userData) {
+    static async checkAuth() {
         try {
-            const response = await fetch(`${this.getBaseURL()}?route=/api/register`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(userData)
-            });
-            
+            const response = await fetch(this.API_BASE_URL + 'check_session.php');
             const result = await response.json();
             return result;
         } catch (error) {
-            console.error('Erro de conexão:', error);
-            return { 
-                success: false, 
-                message: 'Erro de conexão com o servidor' 
-            };
+            console.error('Erro ao verificar sessão:', error);
+            return { logged_in: false };
         }
     }
 
-    static async verifyToken() {
-        const token = this.getToken();
-        if (!token) return false;
-
+    static async logout() {
         try {
-            const response = await fetch(`${this.getBaseURL()}?route=/api/verify`, {
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/json'
-                }
-            });
-            
+            const response = await fetch(this.API_BASE_URL + 'logout.php');
             const result = await response.json();
-            return result.success && result.valid === true;
+            
+            if (result.success) {
+                localStorage.removeItem('user_token');
+                localStorage.removeItem('user_data');
+                window.location.href = '../html/index.html';
+            }
+            
+            return result;
         } catch (error) {
-            console.error('Erro ao verificar token:', error);
-            return false;
+            console.error('Erro no logout:', error);
+            return { success: false, message: 'Erro de conexão' };
         }
+    }
+
+    static saveAuth(token, userData) {
+        localStorage.setItem('user_token', token);
+        localStorage.setItem('user_data', JSON.stringify(userData));
+        console.log('🔐 Dados salvos:', userData);
+    }
+
+    static getUserData() {
+        const userData = localStorage.getItem('user_data');
+        return userData ? JSON.parse(userData) : null;
     }
 
     static isAuthenticated() {
-        return this.getToken() !== null;
+        return localStorage.getItem('user_token') !== null;
     }
 
-    static getToken() {
-        return localStorage.getItem('token');
+    static isAdmin() {
+        const userData = this.getUserData();
+        return userData && userData.tipo_usuario === 'admin';
     }
 
-    static getUser() {
-        const userStr = localStorage.getItem('user');
-        return userStr ? JSON.parse(userStr) : null;
-    }
-
-    static saveAuth(token, user) {
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
-    }
-
-    static clearAuth() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-    }
-
-    static logout() {
-        this.clearAuth();
-        window.location.href = '../html/login.html';
+    static getUserType() {
+        const userData = this.getUserData();
+        return userData ? userData.tipo_usuario : null;
     }
 }
 
-// Debug helper
-window.debugAuth = function() {
-    console.log('🔍 Debug Auth:', {
-        isAuthenticated: AuthService.isAuthenticated(),
-        token: AuthService.getToken(),
-        user: AuthService.getUser(),
-        baseURL: AuthService.getBaseURL()
-    });
-};
-
-// Teste automático da API
-window.testAPI = async function() {
-    console.log('🧪 Testando API...');
+// Função de teste
+async function testAPIConnection() {
+    console.log('🔍 Testando conexão com API...');
     
     try {
-        // Teste básico
-        const response = await fetch(AuthService.getBaseURL());
+        const response = await fetch(AuthService.API_BASE_URL + 'test_connection.php');
         const result = await response.json();
-        console.log('✅ API básica:', result);
-        
-        // Teste veículos
-        const vehiclesResponse = await fetch(`${AuthService.getBaseURL()}?route=/api/vehicles`);
-        const vehiclesResult = await vehiclesResponse.json();
-        console.log('✅ API Veículos:', vehiclesResult);
-        
-        return true;
+        console.log('✅ Teste API:', result);
+        return result;
     } catch (error) {
-        console.error('❌ Teste API falhou:', error);
-        return false;
+        console.error('❌ Erro no teste:', error);
+        return { success: false, message: error.message };
     }
-};
-// Proteção de rotas
-function requireAuth(redirectTo = '../html/login.html') {
-    if (!AuthService.isAuthenticated()) {
-        window.location.href = redirectTo;
-        return false;
-    }
-    return true;
 }
-
-// Verificar autenticação ao carregar a página
-async function checkAuth() {
-    if (!AuthService.isAuthenticated()) {
-        return false;
-    }
-
-    const isValid = await AuthService.verifyToken();
-    if (!isValid) {
-        AuthService.clearAuth();
-        window.location.href = '../html/login.html';
-        return false;
-    }
-
-    return true;
-}
-
-// Debug helper
-window.debugAuth = function() {
-    console.log('🔍 Debug Auth:', {
-        isAuthenticated: AuthService.isAuthenticated(),
-        token: AuthService.getToken(),
-        user: AuthService.getUser(),
-        baseURL: AuthService.getBaseURL()
-    });
-};
-
-// Proteção de rotas
-function requireAuth(redirectTo = '../html/login.html') {
-    if (!AuthService.isAuthenticated()) {
-        window.location.href = redirectTo;
-        return false;
-    }
-    return true;
-}
-
-// Verificar autenticação ao carregar a página
-async function checkAuth() {
-    if (!AuthService.isAuthenticated()) {
-        return false;
-    }
-
-    const isValid = await AuthService.verifyToken();
-    if (!isValid) {
-        AuthService.clearAuth();
-        window.location.href = '../html/login.html';
-        return false;
-    }
-
-    return true;
-}
-
-// Inicializar verificação em páginas protegidas
-document.addEventListener('DOMContentLoaded', function() {
-    const protectedPages = [
-        '/html/usuario/',
-        '/html/adm/',
-        '/html/anunciar.html'
-    ];
-
-    const currentPath = window.location.pathname;
-    const isProtected = protectedPages.some(page => currentPath.includes(page));
-
-    if (isProtected) {
-        checkAuth();
-    }
-});

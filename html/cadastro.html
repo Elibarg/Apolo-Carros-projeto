@@ -25,29 +25,35 @@
             <div class="auth-container">
                 <h1>Cadastro</h1>
                 
-                <form class="auth-form" method="">
+                <!-- Mensagens de feedback -->
+                <div id="message-container" style="display: none;"></div>
+                
+                <form class="auth-form" id="registerForm">
                     <div class="form-group">
-                        <label for="fullname">Nome completo</label>
-                        <input type="text" id="fullname" required>
+                        <label for="nome_completo">Nome completo *</label>
+                        <input type="text" id="nome_completo" name="nome_completo" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="email">E-mail:</label>
-                        <input type="email" id="email" required>
+                        <label for="email">E-mail *</label>
+                        <input type="email" id="email" name="email" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="password">Senha:</label>
-                        <input type="password" id="password" required>
+                        <label for="senha">Senha *</label>
+                        <input type="password" id="senha" name="senha" required minlength="6">
+                        <small>A senha deve ter pelo menos 6 caracteres</small>
                     </div>
                     
                     <div class="form-group">
-                        <label for="confirm-password">Confirme sua senha:</label>
-                        <input type="password" id="confirm-password" required>
+                        <label for="confirmar_senha">Confirmar senha *</label>
+                        <input type="password" id="confirmar_senha" name="confirmar_senha" required>
                     </div>
                     
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-primary btn-block">Cadastrar</button>
+                        <button type="submit" class="btn btn-primary btn-block" id="submitBtn">
+                            Cadastrar
+                        </button>
                     </div>
                     
                     <div class="auth-footer">
@@ -57,7 +63,11 @@
             </div>
         </div>
     </main>
-
+<div style="text-align: center; margin-bottom: 20px;">
+    <button onclick="testFullCommunication()" class="btn btn-outline" style="background: #f8f9fa; border: 1px solid #ddd;">
+        <i class="fas fa-bug"></i> Testar Comunicação com Servidor
+    </button>
+</div>
     <footer class="footer">
         <div class="container">
             <div class="footer-section">
@@ -71,10 +81,134 @@
             </div>
         </div>
         <div class="copyright">
-            <p>&copy; 2025 Apolo Carros. Todos os direitos reservados.</p>
+            <p>&copy; <span id="current-year">2025</span> Apolo Carros. Todos os direitos reservados.</p>
         </div>
     </footer>
 
-    <script src="../js/main.js"></script>
+    <script src="../js/auth-integration.js"></script>
+  <script>
+    
+document.addEventListener('DOMContentLoaded', function() {
+    const registerForm = document.getElementById('registerForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const messageContainer = document.getElementById('message-container');
+
+    if (registerForm) {
+        registerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const nome_completo = document.getElementById('nome_completo').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const senha = document.getElementById('senha').value;
+            const confirmar_senha = document.getElementById('confirmar_senha').value;
+            
+            // Validações
+            if (!nome_completo || !email || !senha || !confirmar_senha) {
+                showMessage('Por favor, preencha todos os campos.', 'error');
+                return;
+            }
+            
+            if (senha !== confirmar_senha) {
+                showMessage('As senhas não coincidem.', 'error');
+                return;
+            }
+            
+            if (senha.length < 6) {
+                showMessage('A senha deve ter pelo menos 6 caracteres.', 'error');
+                return;
+            }
+
+            // Desabilitar botão
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Cadastrando...';
+            submitBtn.disabled = true;
+
+            try {
+                const userData = {
+                    nome_completo: nome_completo,
+                    email: email,
+                    senha: senha
+                };
+
+                const result = await AuthService.register(userData);
+                
+                if (result.success) {
+                    showMessage('Cadastro realizado com sucesso! Redirecionando para login...', 'success');
+                    registerForm.reset();
+                    
+                    setTimeout(() => {
+                        window.location.href = '../html/login.html';
+                    }, 2000);
+                    
+                } else {
+                    showMessage('Erro: ' + result.message, 'error');
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                }
+            } catch (error) {
+                showMessage('Erro de conexão: ' + error.message, 'error');
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+    }
+    
+    function showMessage(message, type) {
+        messageContainer.innerHTML = `
+            <div class="message ${type}">
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
+                ${message}
+            </div>
+        `;
+        messageContainer.style.display = 'block';
+        
+        if (type === 'success') {
+            setTimeout(() => {
+                messageContainer.style.display = 'none';
+            }, 5000);
+        }
+    }
+
+});
+</script>
+    
+    <style>
+        .message {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .message i {
+            font-size: 18px;
+        }
+        
+        .form-group small {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
 </body>
 </html>

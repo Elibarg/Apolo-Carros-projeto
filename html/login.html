@@ -25,7 +25,10 @@
             <div class="auth-container">
                 <h1>LOGIN</h1>
                 
-                <form class="auth-form" id="loginForm" >
+                <!-- Container para mensagens -->
+                <div id="message-container" style="display: none;"></div>
+                
+                <form class="auth-form" id="loginForm">
                     <div class="form-group">
                         <label for="email">E-mail:</label>
                         <input type="email" id="email" name="email" required>
@@ -38,11 +41,11 @@
                     </div>
                     
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+                        <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Entrar</button>
                     </div>
                     
                     <div class="auth-footer">
-                        <p>Não tem uma conta? <a href="../html/cadastro.html">Cadastre-se</a></p>
+                        <p>Não tem uma conta? <a href="cadastro.html">Cadastre-se</a></p>
                     </div>
                 </form>
             </div>
@@ -67,66 +70,128 @@
     </footer>
 
     <script src="../js/auth-integration.js"></script>
-    <script src="../js/main.js"></script>
-<script>
-    // Executar quando a página carregar
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('🚀 Página de login carregada');
-        
-        // Teste automático da API
-        setTimeout(() => {
-            testAPI();
-        }, 1000);
-        
-        // Configurar formulário de login
-        const loginForm = document.getElementById('loginForm');
-        if (loginForm) {
-            loginForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-                
-                console.log('📝 Submetendo login:', { email });
-                
-                const submitBtn = this.querySelector('button[type="submit"]');
-                const originalText = submitBtn.textContent;
-                submitBtn.textContent = 'Entrando...';
-                submitBtn.disabled = true;
-                
-                try {
-                    const result = await AuthService.login(email, password);
-                    console.log('🎯 Resultado:', result);
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Página de login carregada');
+            
+            // Preencher automaticamente para teste
+            document.getElementById('email').value = 'admin@apolocarros.com';
+            document.getElementById('password').value = 'password';
+            
+            // Configurar formulário de login
+            const loginForm = document.getElementById('loginForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const messageContainer = document.getElementById('message-container');
+            
+            if (loginForm) {
+                loginForm.addEventListener('submit', async function(e) {
+                    e.preventDefault(); // IMPEDIR COMPORTAMENTO PADRÃO DO FORMULÁRIO
                     
-                    if (result.success) {
-                        console.log('✅ Login bem-sucedido!');
-                        AuthService.saveAuth(result.data.token, result.data.user);
+                    const email = document.getElementById('email').value;
+                    const password = document.getElementById('password').value;
+                    
+                    console.log('📝 Tentando login via AJAX:', { email });
+                    
+                    // Mostrar loading
+                    const originalText = submitBtn.textContent;
+                    submitBtn.textContent = 'Entrando...';
+                    submitBtn.disabled = true;
+                    
+                    // Limpar mensagens anteriores
+                    messageContainer.style.display = 'none';
+                    
+                    try {
+                        const result = await AuthService.login(email, password);
+                        console.log('🎯 Resultado login:', result);
                         
-                        // Pequeno delay para ver o feedback
-                        setTimeout(() => {
-                            window.location.href = result.data.redirectTo;
-                        }, 500);
-                        
-                    } else {
-                        alert('Erro: ' + result.message);
+                        if (result.success) {
+                            showMessage('✅ Login realizado com sucesso! Redirecionando...', 'success');
+                            
+                            console.log('👤 Tipo de usuário:', result.data.user.tipo_usuario);
+                            console.log('📍 Redirecionando para:', result.data.redirectTo);
+                            
+                            AuthService.saveAuth(result.data.token, result.data.user);
+                            
+                            // Redirecionar após 1 segundo
+                            setTimeout(() => {
+                                window.location.href = result.data.redirectTo;
+                            }, 1000);
+                            
+                        } else {
+                            showMessage('❌ ' + result.message, 'error');
+                            submitBtn.textContent = originalText;
+                            submitBtn.disabled = false;
+                        }
+                    } catch (error) {
+                        console.error('💥 Erro crítico:', error);
+                        showMessage('💥 Erro de conexão: ' + error.message, 'error');
                         submitBtn.textContent = originalText;
                         submitBtn.disabled = false;
                     }
-                } catch (error) {
-                    console.error('💥 Erro crítico:', error);
-                    alert('Erro crítico: ' + error.message);
-                    submitBtn.textContent = originalText;
-                    submitBtn.disabled = false;
-                }
-            });
+                });
+            }
+            
+            // Botões de teste rápido
+            
+            // Atualizar ano no footer
+            const yearElement = document.getElementById('current-year');
+            if (yearElement) {
+                yearElement.textContent = new Date().getFullYear();
+            }
+        });
+        
+        // Função para mostrar mensagens
+        function showMessage(message, type) {
+            const messageContainer = document.getElementById('message-container');
+            messageContainer.innerHTML = `
+                <div class="message ${type}">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
+                    ${message}
+                </div>
+            `;
+            messageContainer.style.display = 'block';
         }
         
-        // Atualizar ano no footer
-        const yearElement = document.getElementById('current-year');
-        if (yearElement) {
-            yearElement.textContent = new Date().getFullYear();
+        // Função para teste rápido
+        async function testarLogin(email, senha) {
+            document.getElementById('email').value = email;
+            document.getElementById('password').value = senha;
+            
+            // Disparar o submit do formulário
+            document.getElementById('loginForm').dispatchEvent(new Event('submit'));
         }
-    });
-</script>
+    </script>
+    
+    <style>
+        .message {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .message i {
+            font-size: 18px;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
 </body>
 </html>

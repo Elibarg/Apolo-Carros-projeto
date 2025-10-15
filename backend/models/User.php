@@ -1,72 +1,52 @@
 <?php
+// Arquivo: backend/models/User.php
 class User {
     private $conn;
-    private $table_name = "users";
+    private $table_name = "usuarios";
 
     public $id;
     public $nome_completo;
     public $email;
     public $senha;
-    public $cpf;
-    public $telefone;
-    public $genero;
-    public $data_nascimento;
-    public $cep;
-    public $estado;
-    public $cidade;
-    public $endereco;
-    public $numero;
-    public $complemento;
-    public $tipo;
-    public $status;
+    public $tipo_usuario;
+    public $data_cadastro;
 
     public function __construct($db) {
         $this->conn = $db;
     }
 
-    // ✅ GETTER para a conexão (se necessário)
-    public function getConnection() {
-        return $this->conn;
-    }
-
-    // Criar usuário
     public function create() {
         $query = "INSERT INTO " . $this->table_name . " 
-                 SET nome_completo=:nome_completo, email=:email, senha=:senha, 
-                     cpf=:cpf, telefone=:telefone, genero=:genero, data_nascimento=:data_nascimento,
-                     cep=:cep, estado=:estado, cidade=:cidade, endereco=:endereco, 
-                     numero=:numero, complemento=:complemento, tipo=:tipo";
-
+                 (nome_completo, email, senha, tipo_usuario) 
+                 VALUES (:nome_completo, :email, :senha, :tipo_usuario)";
+        
         $stmt = $this->conn->prepare($query);
 
+        // Sanitizar
+        $this->nome_completo = htmlspecialchars(strip_tags($this->nome_completo));
+        $this->email = htmlspecialchars(strip_tags($this->email));
+        
         // Hash da senha
-        $this->senha = password_hash($this->senha, PASSWORD_BCRYPT);
+        $this->senha = password_hash($this->senha, PASSWORD_DEFAULT);
+        
+        // Tipo de usuário padrão
+        $this->tipo_usuario = 'usuario';
 
-        // Bind dos parâmetros
+        // Bind values
         $stmt->bindParam(":nome_completo", $this->nome_completo);
         $stmt->bindParam(":email", $this->email);
         $stmt->bindParam(":senha", $this->senha);
-        $stmt->bindParam(":cpf", $this->cpf);
-        $stmt->bindParam(":telefone", $this->telefone);
-        $stmt->bindParam(":genero", $this->genero);
-        $stmt->bindParam(":data_nascimento", $this->data_nascimento);
-        $stmt->bindParam(":cep", $this->cep);
-        $stmt->bindParam(":estado", $this->estado);
-        $stmt->bindParam(":cidade", $this->cidade);
-        $stmt->bindParam(":endereco", $this->endereco);
-        $stmt->bindParam(":numero", $this->numero);
-        $stmt->bindParam(":complemento", $this->complemento);
-        $stmt->bindParam(":tipo", $this->tipo);
+        $stmt->bindParam(":tipo_usuario", $this->tipo_usuario);
 
         if($stmt->execute()) {
+            $this->id = $this->conn->lastInsertId();
             return true;
         }
         return false;
     }
 
-    // Buscar usuário por email
-    public function getByEmail() {
-        $query = "SELECT id, nome_completo, email, senha, tipo, status 
+    public function emailExists() {
+        $query = "SELECT id, nome_completo, senha, tipo_usuario 
                   FROM " . $this->table_name . " 
                   WHERE email = :email 
                   LIMIT 1";
@@ -77,82 +57,13 @@ class User {
 
         if($stmt->rowCount() > 0) {
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $row;
-        }
-        return false;
-    }
-
-    // Buscar usuário por ID
-    public function getById() {
-        $query = "SELECT id, nome_completo, email, cpf, telefone, genero, 
-                         data_nascimento, cep, estado, cidade, endereco, numero, 
-                         complemento, tipo, status, created_at 
-                  FROM " . $this->table_name . " 
-                  WHERE id = :id 
-                  LIMIT 1";
-
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":id", $this->id);
-        $stmt->execute();
-
-        if($stmt->rowCount() > 0) {
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        }
-        return false;
-    }
-
-    // Atualizar usuário
-    public function update() {
-        $query = "UPDATE " . $this->table_name . " 
-                 SET nome_completo=:nome_completo, telefone=:telefone, genero=:genero, 
-                     data_nascimento=:data_nascimento, cep=:cep, estado=:estado, 
-                     cidade=:cidade, endereco=:endereco, numero=:numero, complemento=:complemento
-                 WHERE id = :id";
-
-        $stmt = $this->conn->prepare($query);
-
-        $stmt->bindParam(":nome_completo", $this->nome_completo);
-        $stmt->bindParam(":telefone", $this->telefone);
-        $stmt->bindParam(":genero", $this->genero);
-        $stmt->bindParam(":data_nascimento", $this->data_nascimento);
-        $stmt->bindParam(":cep", $this->cep);
-        $stmt->bindParam(":estado", $this->estado);
-        $stmt->bindParam(":cidade", $this->cidade);
-        $stmt->bindParam(":endereco", $this->endereco);
-        $stmt->bindParam(":numero", $this->numero);
-        $stmt->bindParam(":complemento", $this->complemento);
-        $stmt->bindParam(":id", $this->id);
-
-        if($stmt->execute()) {
+            $this->id = $row['id'];
+            $this->nome_completo = $row['nome_completo'];
+            $this->senha = $row['senha'];
+            $this->tipo_usuario = $row['tipo_usuario'];
             return true;
         }
         return false;
-    }
-
-    // Verificar se email já existe
-    public function emailExists() {
-        $query = "SELECT id FROM " . $this->table_name . " 
-                  WHERE email = :email 
-                  LIMIT 1";
-
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":email", $this->email);
-        $stmt->execute();
-
-        return $stmt->rowCount() > 0;
-    }
-
-    // Verificar se CPF já existe
-    public function cpfExists() {
-        $query = "SELECT id FROM " . $this->table_name . " 
-                  WHERE cpf = :cpf 
-                  LIMIT 1";
-
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":cpf", $this->cpf);
-        $stmt->execute();
-
-        return $stmt->rowCount() > 0;
     }
 }
 ?>

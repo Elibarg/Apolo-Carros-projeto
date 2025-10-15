@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vendas | Apolo Carros Admin</title>
+    <!-- CORREÇÃO: Caminhos relativos -->
     <link rel="stylesheet" href="../../css/style.css">
     <link rel="stylesheet" href="../../css/admin.css">
     <link rel="stylesheet" href="../../css/vendas.css">
@@ -26,16 +27,19 @@
                  <div class="header-right">
                     <div class="user-dropdown">
                         <img src="" alt="Admin">
-                        <span>Admin <i class="fas fa-chevron-down"></i></span>
+                        <span id="adminName">Admin <i class="fas fa-chevron-down"></i></span>
                         <div class="dropdown-menu">
                             <a href="perfil_adm.html"><i class="fas fa-user"></i> Perfil</a>
-                            <a href="#"><i class="fas fa-sign-out-alt"></i> Sair</a>
+                            <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Sair</a>
                         </div>
                     </div>
                 </div>
             </header>
 
             <div class="admin-content">
+                <!-- Adicione verificação de admin -->
+                <div id="adminCheck" style="display: none;"></div>
+                
                 <div class="sales-overview">
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -78,7 +82,28 @@
         </main>
     </div>
 
-    <script src="../../js/main.js"></script>
-    <script src="../../js/admin.js"></script>
+    <script>
+        // Verificar se é admin
+        document.addEventListener('DOMContentLoaded', function() {
+            const userData = AuthService.getUserData();
+            
+            if (userData && userData.tipo_usuario === 'admin') {
+                // É admin - mostrar conteúdo
+                document.getElementById('adminName').innerHTML = 
+                    `${userData.nome_completo} <i class="fas fa-chevron-down"></i>`;
+                
+                console.log('✅ Admin autenticado:', userData);
+            } else {
+                // Não é admin - redirecionar
+                console.log('❌ Acesso negado. Redirecionando...');
+                alert('Acesso restrito a administradores.');
+                window.location.href = '../../html/login.html';
+            }
+        });
+
+        function logout() {
+            AuthService.logout();
+        }
+    </script>
 </body>
 </html>
