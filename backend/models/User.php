@@ -155,12 +155,13 @@ class User {
     }
 
     // Buscar usuário por ID
+    // No arquivo User.php - função readOne()
     public function readOne() {
-        $query = "SELECT nome_completo, email, tipo_usuario, data_nascimento, genero, cpf, cep, estado, cidade, endereco, telefone, data_cadastro 
-                  FROM " . $this->table_name . " 
-                  WHERE id = :id 
-                  AND ativo = 1
-                  LIMIT 0,1";
+        $query = "SELECT id, nome_completo, email, tipo_usuario, data_nascimento, genero, cpf, cep, estado, cidade, endereco, telefone, data_cadastro 
+              FROM " . $this->table_name . " 
+              WHERE id = :id 
+              AND ativo = 1
+              LIMIT 0,1";
 
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":id", $this->id);
@@ -169,6 +170,8 @@ class User {
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if($row) {
+            // ✅ IMPORTANTE: Atribuir o ID também
+            $this->id = $row['id'];
             $this->nome_completo = $row['nome_completo'];
             $this->email = $row['email'];
             $this->tipo_usuario = $row['tipo_usuario'];

@@ -295,39 +295,120 @@
                 }
             }
         }
-
-        function initializeUserPage(userData) {
-            console.log('👤 Inicializando página para:', userData);
-            
-            // Atualizar mensagem de boas-vindas
-            let welcomeHTML = `
-                <h3>Bem-vindo, ${userData.nome_completo}!</h3>
-                <p>Gerencie suas informações pessoais e preferências.</p>
-                <div style="margin-top: 10px; font-size: 14px; color: #666;">
-                    <strong>Email:</strong> ${userData.email}
-            `;
-            
-            if (userData.tipo_usuario === 'admin') {
-                welcomeHTML += ` | <strong>Tipo:</strong> Administrador`;
+        // ✅ FUNÇÃO PARA BUSCAR DADOS COMPLETOS DO USUÁRIO DA API
+        async function fetchUserCompleteData() {
+            const userData = AuthService.getUserData();
+            if (!userData || !userData.id) {
+                console.log('❌ Não há usuário logado');
+                return null;
             }
-            
-            welcomeHTML += `</div>`;
-            
-            document.getElementById('userWelcome').innerHTML = welcomeHTML;
-            
-            // Preencher formulário com dados do usuário
+
+            try {
+                console.log('📡 Buscando dados completos do usuário ID:', userData.id);
+                
+                const response = await fetch(`../../backend/api/get_user.php?id=${userData.id}`);
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    console.log('✅ Dados completos recebidos:', result.data);
+                    return result.data;
+                } else {
+                    console.log('❌ Erro ao buscar dados:', result.message);
+                    return null;
+                }
+            } catch (error) {
+                console.error('💥 Erro na requisição:', error);
+                return null;
+            }
+        }
+       async function initializeUserPage(userData) {
+        console.log('👤 Inicializando página para:', userData);
+        
+        // ✅ BUSCAR DADOS COMPLETOS DO BANCO DE DADOS
+        showMessage('🔄 Carregando seus dados...', 'info');
+        
+        const completeUserData = await fetchUserCompleteData();
+        
+        if (completeUserData) {
+            // ✅ PREENCHER FORMULÁRIO COM DADOS COMPLETOS DO BANCO
+            fillFormWithUserData(completeUserData);
+            showMessage('✅ Dados carregados com sucesso!', 'success');
+        } else {
+            // ❌ SE NÃO CONSEGUIR BUSCAR, USA OS DADOS BÁSICOS DO LOCALSTORAGE
+            console.log('⚠️ Usando dados básicos do localStorage');
             document.getElementById('email').value = userData.email;
             document.getElementById('fullname').value = userData.nome_completo;
-            
-            // Carregar dados adicionais do usuário específico
-            loadUserAdditionalData();
-            
-            // Configurar formulário
-            setupUserForm();
-            
-            // Configurar máscaras
-            setupMasks();
+            showMessage('⚠️ Alguns dados podem estar incompletos', 'info');
         }
+        
+        // ✅ MESMO ASSIM TENTA CARREGAR DADOS ADICIONAIS DO LOCALSTORAGE
+        loadUserAdditionalData();
+        
+        // Configurar formulário
+        setupUserForm();
+        
+        // Configurar máscaras
+        setupMasks();
+        
+        // Atualizar mensagem de boas-vindas
+        updateWelcomeMessage(userData);
+    }
+
+    // ✅ FUNÇÃO PARA PREENCHER FORMULÁRIO COM DADOS COMPLETOS
+    function fillFormWithUserData(userData) {
+        console.log('📝 Preenchendo formulário com:', userData);
+        
+        // Dados básicos (sempre disponíveis)
+        document.getElementById('email').value = userData.email || '';
+        document.getElementById('fullname').value = userData.nome_completo || '';
+        
+        // Dados adicionais (podem ser null no banco)
+        document.getElementById('gender').value = userData.genero || '';
+        document.getElementById('birthdate').value = userData.data_nascimento || '';
+        document.getElementById('cpf').value = userData.cpf || '';
+        document.getElementById('cep').value = userData.cep || '';
+        document.getElementById('state').value = userData.estado || '';
+        document.getElementById('address').value = userData.endereco || '';
+        document.getElementById('phone').value = userData.telefone || '';
+        
+        // Cidade precisa carregar as opções primeiro
+        if (userData.estado && userData.cidade) {
+            loadCitiesFromAPI(userData.estado, userData.cidade);
+        } else {
+            document.getElementById('city').innerHTML = '<option value="">Selecione o estado primeiro</option>';
+        }
+        
+        // ✅ SALVAR DADOS NO LOCALSTORAGE PARA USO FUTURO
+        const additionalData = {
+            gender: userData.genero,
+            birthdate: userData.data_nascimento,
+            cpf: userData.cpf,
+            cep: userData.cep,
+            state: userData.estado,
+            city: userData.cidade,
+            address: userData.endereco,
+            phone: userData.telefone
+        };
+        saveUserAdditionalData(additionalData);
+    }
+
+// ✅ FUNÇÃO ATUALIZADA PARA MENSAGEM DE BOAS-VINDAS
+function updateWelcomeMessage(userData) {
+    let welcomeHTML = `
+        <h3>Bem-vindo, ${userData.nome_completo}!</h3>
+        <p>Gerencie suas informações pessoais e preferências.</p>
+        <div style="margin-top: 10px; font-size: 14px; color: #666;">
+            <strong>Email:</strong> ${userData.email}
+    `;
+    
+    if (userData.tipo_usuario === 'admin') {
+        welcomeHTML += ` | <strong>Tipo:</strong> Administrador`;
+    }
+    
+    welcomeHTML += `</div>`;
+    
+    document.getElementById('userWelcome').innerHTML = welcomeHTML;
+}
 
         function setupUserForm() {
             const userForm = document.getElementById('userForm');
@@ -637,10 +718,27 @@
 
         function logout() {
             if (confirm('Tem certeza que deseja sair?')) {
-                AuthService.logout();
+                console.log('🚪 Usuário solicitou logout - redirecionando para index');
+                
+                // Mostrar mensagem de carregamento
+                showMessage('🚪 Saindo...', 'info');
+                
+                // Chamar o serviço de logout
+                AuthService.logout().then(result => {
+                    if (!result.success) {
+                        console.log('⚠️ Logout com aviso, mas redirecionando para index:', result.message);
+                        // Mesmo com aviso, redireciona para INDEX
+                        window.location.href = '../../html/index.html';
+                    }
+                    // Se foi success, o próprio AuthService já redirecionou
+                }).catch(error => {
+                    console.error('💥 Erro no logout, redirecionando para index:', error);
+                    // Em caso de erro, limpa e redireciona para INDEX
+                    localStorage.clear();
+                    window.location.href = '../../html/index.html';
+                });
             }
         }
-
         function showMessage(message, type) {
             const messageContainer = document.getElementById('message-container');
             messageContainer.innerHTML = `

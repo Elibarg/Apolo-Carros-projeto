@@ -110,19 +110,61 @@ class AuthService {
 
     static async logout() {
         try {
-            const response = await fetch(this.API_BASE_URL + 'logout.php');
+            console.log('🚪 Iniciando logout...');
+            
+            const response = await fetch(this.API_BASE_URL + 'logout.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            console.log('📥 Resposta do logout:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const result = await response.json();
+            console.log('📊 Resultado logout:', result);
+            
+            // ✅ LIMPAR LOCALSTORAGE
+            localStorage.removeItem('user_token');
+            localStorage.removeItem('user_data');
+            
+            // ✅ LIMPAR DADOS ADICIONAIS DE USUÁRIO
+            this.clearAllUserData();
             
             if (result.success) {
-                localStorage.removeItem('user_token');
-                localStorage.removeItem('user_data');
-                window.location.href = '../html/index.html';
+                console.log('✅ Logout realizado com sucesso');
+                // ✅ REDIRECIONAR PARA INDEX EM VEZ DE LOGIN
+                const redirectUrl = result.redirect || '../../html/index.html';
+                console.log('📍 Redirecionando para:', redirectUrl);
+                window.location.href = redirectUrl;
+            } else {
+                console.log('⚠️ Logout com mensagem:', result.message);
+                // ✅ REDIRECIONAR PARA INDEX MESMO COM ERRO
+                window.location.href = '../../html/index.html';
             }
             
             return result;
+            
         } catch (error) {
-            console.error('Erro no logout:', error);
-            return { success: false, message: 'Erro de conexão' };
+            console.error('💥 Erro no logout:', error);
+            
+            // ✅ LIMPAR DADOS MESMO COM ERRO
+            localStorage.removeItem('user_token');
+            localStorage.removeItem('user_data');
+            this.clearAllUserData();
+            
+            // ✅ REDIRECIONAR PARA INDEX MESMO COM ERRO
+            console.log('📍 Redirecionando para index após erro');
+            window.location.href = '../../html/index.html';
+            
+            return { 
+                success: false, 
+                message: 'Erro de conexão: ' + error.message 
+            };
         }
     }
 
