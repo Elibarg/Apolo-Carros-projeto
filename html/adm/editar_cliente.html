@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Cliente | Apolo Carros Admin</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="../../css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="../../js/auth-integration.js"></script>
+</head>
+<body>
+    <div class="admin-container">
+        <main class="admin-main">
+            <header class="admin-header">
+                <div class="header-left">
+                    <h2><i class="fas fa-users"></i> Editar Usuário</h2>
+                    <nav class="breadcrumb">
+                        <i class="fas fa-chevron-right"></i>
+                        <a href="clientes.html">Usuário</a>
+                        <i class="fas fa-chevron-right"></i>
+                        <span>Editar</span>
+                    </nav> 
+                </div>
+                <div class="header-right">
+                    <div class="user-dropdown">
+                        <img src="../../img/Chevrolet_Onix.png" alt="Admin">
+                        <span id="adminName">Admin <i class="fas fa-chevron-down"></i></span>
+                        <div class="dropdown-menu">
+                            <a href="perfil_adm.html"><i class="fas fa-user"></i> Perfil</a>
+                            <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Sair</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="admin-content">
+                <form class="card client-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="name">Nome Completo</label>
+                            <input type="text" id="name" value="Carlos Silva" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">E-mail</label>
+                            <input type="email" id="email" value="carlos@email.com" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="phone">Telefone</label>
+                            <input type="tel" id="phone" value="(11) 9999-9999" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="interest">Interesse Atual</label>
+                        <select id="interest">
+                            <option value="">Nenhum</option>
+                            <option value="sedan-x" selected>Sedan X</option>
+                            <option value="hatch-y">Hatch Y</option>
+                            <option value="suv-z">SUV Z</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="last-purchase">Última Compra</label>
+                        <input type="date" id="last-purchase" value="2019-03-02">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-outline">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const userData = AuthService.getUserData();
+            
+            if (userData && userData.tipo_usuario === 'admin') {
+                document.getElementById('adminName').innerHTML = 
+                    `${userData.nome_completo} <i class="fas fa-chevron-down"></i>`;
+            } else {
+                alert('Acesso restrito a administradores.');
+                window.location.href = '../../html/login.html';
+            }
+        });
+    </script>
+</body>
+</html>

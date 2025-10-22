@@ -1,0 +1,621 @@
+/* ==========================
+   Estrutura Principal ADM
+   ========================== */
+.admin-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f5f7fa;
+}
+
+/* ==========================
+   HEADER
+   ========================== */
+.admin-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 1.5rem;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header-left h2 {
+    font-size: 1.25rem;
+    color: var(--dark-color);
+}
+
+.menu-toggle {
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: var(--dark-color);
+    display: none;
+}
+
+.user-dropdown {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.user-dropdown img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.user-dropdown span {
+    font-weight: 500;
+}
+
+.user-dropdown i.fa-chevron-down {
+    font-size: 0.8rem;
+}
+
+.user-dropdown .dropdown-menu {
+    position: absolute;
+    top: 120%;
+    right: 0;
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    display: none;
+    min-width: 150px;
+    z-index: 2000;
+}
+
+.user-dropdown.active .dropdown-menu {
+    display: block;
+}
+
+.dropdown-menu a {
+    display: block;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    color: var(--text-color);
+    transition: background 0.2s;
+}
+
+.dropdown-menu a:hover {
+    background: #f5f7fa;
+    color: var(--secondary-color);
+}
+
+/* ==========================
+   SIDEBAR/MENU LATERAL
+   ========================== */
+.admin-sidebar {
+    position: fixed;
+    top: 60px; /* abaixo do header */
+    left: 0;
+    width: 250px;
+    height: calc(100vh - 60px);
+    background-color: var(--dark-color);
+    color: white;
+    padding: 1.5rem 0;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.15);
+    overflow-y: auto;
+    z-index: 999;
+    transition: left 0.3s ease;
+}
+
+.admin-sidebar .close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: white;
+    display: none;
+}
+
+/* Logo */
+.admin-logo {
+    padding: 0 1.5rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-logo h1 {
+    color: white;
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.admin-logo p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+
+/* Menu */
+.admin-menu ul {
+    list-style: none;
+    padding: 1.5rem 0;
+    margin: 0;
+}
+
+.admin-menu li {
+    margin-bottom: 0.25rem;
+}
+
+.admin-menu a {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    color: rgba(255, 255, 255, 0.8);
+    transition: all 0.3s;
+}
+
+.admin-menu a:hover,
+.admin-menu li.active a {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.admin-menu i {
+    margin-right: 0.75rem;
+    width: 20px;
+    text-align: center;
+}
+
+/* ==========================
+   CONTEÚDO PRINCIPAL
+   ========================== */
+.admin-main {
+    flex: 1;
+    margin-left: 250px;
+    margin-top: 60px; /* para não ficar sob o header */
+    padding: 1.5rem;
+    transition: margin-left 0.3s ease;
+}
+
+/* ==========================
+   CONTEÚDO DO PAINEL (mantendo estilos antigos)
+   ========================== */
+.admin-content {
+    padding: 1.5rem 0;
+}
+
+.card {
+    background-color: white;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.search-bar {
+    display: flex;
+    width: 300px;
+}
+
+.search-bar input {
+    flex: 1;
+    padding: 0.5rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px 0 0 4px;
+    font-size: 0.9rem;
+}
+
+.search-bar button {
+    border-radius: 0 4px 4px 0;
+    padding: 0 1rem;
+}
+
+/* Tabela */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th, .data-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.data-table th {
+    background-color: #f9fafb;
+    font-weight: 500;
+    color: var(--dark-color);
+}
+
+/* Badges */
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.badge.success {
+    background-color: rgba(39, 174, 96, 0.1);
+    color: #27ae60;
+}
+
+.badge.warning {
+    background-color: rgba(241, 196, 15, 0.1);
+    color: #f1c40f;
+}
+
+.actions {
+    white-space: nowrap;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    min-width: auto;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+}
+
+/* Formulários */
+.vehicle-form, .client-form {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.form-row {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.form-group {
+    flex: 1;
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.image-upload-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 1rem;
+}
+
+.image-preview {
+    position: relative;
+    height: 120px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.remove-image {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: rgba(231, 76, 60, 0.8);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+}
+
+.upload-new {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 120px;
+    border: 2px dashed #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.upload-new:hover {
+    border-color: var(--secondary-color);
+    background-color: rgba(52, 152, 219, 0.05);
+}
+
+.upload-new i {
+    font-size: 1.5rem;
+    color: var(--secondary-color);
+    margin-bottom: 0.5rem;
+}
+
+.upload-new span {
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+.upload-new input {
+    display: none;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #eee;
+}
+
+/* Estilos específicos para o painel de vendas simplificado */
+.sales-overview {
+    margin-bottom: 2rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-right: 1rem;
+}
+
+.stat-info h3 {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-bottom: 0.25rem;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.chart-container {
+    height: 300px;
+    position: relative;
+}
+
+.chart-bars {
+    display: flex;
+    height: 100%;
+    align-items: flex-end;
+    gap: 1.5rem;
+    padding-top: 1rem;
+}
+
+.chart-bar {
+    flex: 1;
+    background-color: var(--secondary-color);
+    border-radius: 4px 4px 0 0;
+    min-width: 40px;
+    position: relative;
+    transition: height 0.5s;
+}
+
+.chart-bar::after {
+    content: attr(data-month);
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+/* Estilos para Perfil */
+.profile-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    padding: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.profile-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.avatar-upload {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 1rem;
+}
+
+.avatar-upload img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #3498db;
+}
+
+.btn-upload {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: #3498db;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+#avatarInput {
+    display: none;
+}
+
+.section-title {
+    margin: 2rem 0 1rem;
+    color: #2c3e50;
+    font-size: 1.1rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+/* Estilos para formulários de adição */
+.form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.form-section h3 {
+    margin-bottom: 1rem;
+    color: #2c3e50;
+}
+
+.upload-area {
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    grid-column: span 2;
+}
+
+.upload-area:hover {
+    border-color: #3498db;
+    background: rgba(52, 152, 219, 0.05);
+}
+
+.preview-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.btn-cep {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+/* ==========================
+   RESPONSIVIDADE
+   ========================== */
+@media (max-width: 992px) {
+    .menu-toggle {
+        display: block;
+    }
+    
+    .admin-sidebar {
+        left: -250px;
+    }
+    
+    .admin-sidebar.active {
+        left: 0;
+    }
+    
+    .admin-sidebar .close-btn {
+        display: block;
+    }
+    
+    .admin-main {
+        margin-left: 0;
+    }
+    
+    .admin-sidebar.active ~ .admin-main {
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .toolbar {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .search-bar {
+        width: 100%;
+    }
+    
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .admin-sidebar {
+        width: 220px;
+    }
+}
+.badge.user {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.badge.admin {
+    background: #fff3e0;
+    color: #f57c00;
+    font-weight: bold;
+}

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estoque | Apolo Carros Admin</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="../../css/admin.css">
+    <link rel="stylesheet" href="../../css/vendas.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../../js/componentsAdm.js"></script>
+    <script src="../../js/auth-integration.js"></script>
+</head>
+<body>
+    <nav></nav>
+    <div class="admin-container">
+        <main class="admin-main">
+             <header class="admin-header">
+                <div class="header-left">
+                    <h2><i class="fas fa-car"></i> Estoque de Veículos</h2>
+                </div>
+                <div class="header-right">
+                    <div class="user-dropdown">
+                        <img src="../../img/Chevrolet_Onix.png" alt="Admin">
+                        <span id="adminName">Admin <i class="fas fa-chevron-down"></i></span>
+                        <div class="dropdown-menu">
+                            <a href="perfil_adm.html"><i class="fas fa-user"></i> Perfil</a>
+                            <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Sair</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <div class="admin-content">
+                <div class="toolbar">
+                    <div class="search-bar">
+                        <input type="text" placeholder="Buscar veículo...">
+                        <button class="btn btn-primary"><i class="fas fa-search"></i></button>
+                    </div>
+                    <a href="adicionar_carros.html" class="btn btn-primary"><i class="fas fa-plus"></i> Adicionar Veículo</a>
+                </div>
+
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Modelo</th>
+                                    <th>Ano</th>
+                                    <th>KM</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Sedan X</td>
+                                    <td>2021</td>
+                                    <td>95.000</td>
+                                    <td><span class="badge success">Disponível</span></td>
+                                    <td class="actions">
+                                        <a href="editar_estoque.html" class="btn btn-sm btn-outline"><i class="fas fa-edit"></i></a>
+                                        <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Sedan X</td>
+                                    <td>2021</td>
+                                    <td>95.000</td>
+                                    <td><span class="badge success">Disponível</span></td>
+                                    <td class="actions">
+                                        <a href="editar_estoque.html" class="btn btn-sm btn-outline"><i class="fas fa-edit"></i></a>
+                                        <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Sedan X</td>
+                                    <td>2021</td>
+                                    <td>95.000</td>
+                                    <td><span class="badge warning">Reservado</span></td>
+                                    <td class="actions">
+                                        <a href="editar_estoque.html" class="btn btn-sm btn-outline"><i class="fas fa-edit"></i></a>
+                                        <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pagination">
+                        <button class="btn btn-outline" disabled><i class="fas fa-chevron-left"></i></button>
+                        <button class="btn btn-outline active">1</button>
+                        <button class="btn btn-outline">2</button>
+                        <button class="btn btn-outline">3</button>
+                        <button class="btn btn-outline"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const userData = AuthService.getUserData();
+            
+            if (userData && userData.tipo_usuario === 'admin') {
+                document.getElementById('adminName').innerHTML = 
+                    `${userData.nome_completo} <i class="fas fa-chevron-down"></i>`;
+            } else {
+                alert('Acesso restrito a administradores.');
+                window.location.href = '../../html/login.html';
+            }
+        });
+    </script>
+</body>
+</html>
