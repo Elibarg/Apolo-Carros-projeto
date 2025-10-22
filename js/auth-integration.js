@@ -1,7 +1,7 @@
 // Arquivo: js/auth-integration.js
 class AuthService {
-    // ✅ CAMINHO CORRETO - baseado na estrutura do seu projeto
-    static API_BASE_URL = '../backend/api/';
+    // ✅ CORRIGIDO PARA XAMPP
+    static API_BASE_URL = '/Apolo-Carros-projeto/backend/api/';
 
     static async register(userData) {
         console.log('📤 Enviando dados para:', this.API_BASE_URL + 'register.php');
@@ -111,7 +111,7 @@ class AuthService {
             if (result.redirect) {
                 window.location.href = result.redirect;
             } else {
-                window.location.href = '../index.html';
+                window.location.href = '/Apolo-Carros-projeto/html/index.html';
             }
             
             return result;
@@ -123,7 +123,7 @@ class AuthService {
             this.clearUserData();
             
             // ✅ REDIRECIONAR MESMO COM ERRO
-            window.location.href = '../index.html';
+            window.location.href = '/Apolo-Carros-projeto/html/index.html';
             
             return { 
                 success: false, 
@@ -165,21 +165,116 @@ class AuthService {
         const userData = this.getUserData();
         return userData ? userData.tipo_usuario : null;
     }
+
+    // ✅ NOVO MÉTODO: Verificar autenticação em páginas protegidas
+    static requireAuth(redirectTo = '/Apolo-Carros-projeto/html/login.html') {
+        if (!this.isAuthenticated()) {
+            window.location.href = redirectTo;
+            return false;
+        }
+        return true;
+    }
+
+    // ✅ NOVO MÉTODO: Verificar se é admin
+    static requireAdmin(redirectTo = '/Apolo-Carros-projeto/html/login.html') {
+        if (!this.isAuthenticated()) {
+            window.location.href = redirectTo;
+            return false;
+        }
+        
+        if (!this.isAdmin()) {
+            alert('Acesso restrito a administradores.');
+            window.location.href = '/Apolo-Carros-projeto/html/index.html';
+            return false;
+        }
+        
+        return true;
+    }
+
+    // ✅ NOVO MÉTODO: Atualizar dados do usuário
+    static updateUserData(newData) {
+        const currentData = this.getUserData();
+        if (currentData) {
+            const updatedData = { ...currentData, ...newData };
+            localStorage.setItem('user_data', JSON.stringify(updatedData));
+            console.log('🔐 Dados do usuário atualizados:', updatedData);
+        }
+    }
+
+    // ✅ NOVO MÉTODO: Verificar token expirado
+    static isTokenExpired() {
+        // Implementar lógica de verificação de expiração do token se necessário
+        return false;
+    }
+
+    // ✅ NOVO MÉTODO: Redirecionar baseado no tipo de usuário
+    static redirectByUserType() {
+        const userData = this.getUserData();
+        if (userData) {
+            if (userData.tipo_usuario === 'admin') {
+                window.location.href = '/Apolo-Carros-projeto/html/adm/painel_de_vendas.html';
+            } else {
+                window.location.href = '/Apolo-Carros-projeto/html/index.html';
+            }
+        }
+    }
 }
 
 // ✅ FUNÇÃO GLOBAL PARA LOGOUT
 function logout() {
-    AuthService.logout();
+    if (confirm('Tem certeza que deseja sair?')) {
+        AuthService.logout();
+    }
 }
 
-// ✅ VERIFICAÇÃO AUTOMÁTICA DE AUTENTICAÇÃO
+// ✅ VERIFICAÇÃO AUTOMÁTICA DE AUTENTICAÇÃO EM PÁGINAS PROTEGIDAS
 document.addEventListener('DOMContentLoaded', function() {
-    // Para páginas que requerem admin
-    if (window.location.pathname.includes('/adm/')) {
-        const userData = AuthService.getUserData();
-        if (!userData || userData.tipo_usuario !== 'admin') {
-            alert('Acesso restrito a administradores.');
-            window.location.href = '../login.html';
+    const currentPath = window.location.pathname;
+    
+    // Páginas que requerem autenticação
+    const protectedPages = [
+        '/Apolo-Carros-projeto/html/adm/',
+        '/Apolo-Carros-projeto/html/perfil/'
+    ];
+    
+    // Páginas que requerem admin
+    const adminPages = [
+        '/Apolo-Carros-projeto/html/adm/'
+    ];
+    
+    // Verificar se está em uma página protegida
+    const isProtectedPage = protectedPages.some(page => currentPath.includes(page));
+    const isAdminPage = adminPages.some(page => currentPath.includes(page));
+    
+    if (isProtectedPage) {
+        if (isAdminPage) {
+            AuthService.requireAdmin();
+        } else {
+            AuthService.requireAuth();
         }
     }
+    
+    // ✅ ATUALIZAR INTERFACE COM DADOS DO USUÁRIO
+    const userData = AuthService.getUserData();
+    if (userData) {
+        // Atualizar elementos com classe 'user-name'
+        document.querySelectorAll('.user-name').forEach(element => {
+            element.textContent = userData.nome_completo;
+        });
+        
+        // Atualizar elementos com classe 'user-email'
+        document.querySelectorAll('.user-email').forEach(element => {
+            element.textContent = userData.email;
+        });
+        
+        // Atualizar elementos com classe 'user-type'
+        document.querySelectorAll('.user-type').forEach(element => {
+            element.textContent = userData.tipo_usuario === 'admin' ? 'Administrador' : 'Usuário';
+        });
+    }
 });
+
+// ✅ EXPORTAR PARA USO EM MÓDULOS (se necessário)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = AuthService;
+}

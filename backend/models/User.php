@@ -10,6 +10,7 @@ class User {
     public $email;
     public $senha;
     public $tipo_usuario;
+    public $avatar_url;
     public $data_nascimento;
     public $genero;
     public $cpf;
@@ -69,12 +70,14 @@ class User {
             $this->id = $this->conn->lastInsertId();
             return true;
         }
+        
+        error_log("❌ Erro ao criar usuário: " . implode(", ", $stmt->errorInfo()));
         return false;
     }
 
     // Verificar se email existe
     public function emailExists() {
-        $query = "SELECT id, nome_completo, senha, tipo_usuario, data_nascimento, genero, cpf, cep, estado, cidade, endereco, telefone 
+        $query = "SELECT id, nome_completo, senha, tipo_usuario, avatar_url, data_nascimento, genero, cpf, cep, estado, cidade, endereco, telefone 
                   FROM " . $this->table_name . " 
                   WHERE email = :email 
                   AND ativo = 1
@@ -91,6 +94,7 @@ class User {
             $this->nome_completo = $row['nome_completo'];
             $this->senha = $row['senha'];
             $this->tipo_usuario = $row['tipo_usuario'];
+            $this->avatar_url = $row['avatar_url'];
             $this->data_nascimento = $row['data_nascimento'];
             $this->genero = $row['genero'];
             $this->cpf = $row['cpf'];
@@ -105,59 +109,63 @@ class User {
         return false;
     }
 
-    // Atualizar dados do usuário
-    // No arquivo User.php, certifique-se de que a função update está assim:
+    // ✅ MÉTODO UPDATE CORRIGIDO - ATUALIZA APENAS CAMPOS ENVIADOS
     public function update() {
-        $query = "UPDATE " . $this->table_name . " 
-                SET 
-                    nome_completo = :nome_completo,
-                    email = :email,
-                    data_nascimento = :data_nascimento,
-                    genero = :genero,
-                    cpf = :cpf,
-                    cep = :cep,
-                    estado = :estado,
-                    cidade = :cidade,
-                    endereco = :endereco,
-                    telefone = :telefone,
-                    data_atualizacao = CURRENT_TIMESTAMP
-                WHERE id = :id";
+        // ✅ CONSTRUIR QUERY DINAMICAMENTE APENAS COM CAMPOS QUE FORAM MODIFICADOS
+        $fields = [];
+        $params = [];
         
-        $stmt = $this->conn->prepare($query);
-
-        // Sanitizar dados
-        $this->nome_completo = htmlspecialchars(strip_tags($this->nome_completo));
-        $this->email = htmlspecialchars(strip_tags($this->email));
-        $this->cpf = htmlspecialchars(strip_tags($this->cpf));
-        $this->cep = htmlspecialchars(strip_tags($this->cep));
-        $this->estado = htmlspecialchars(strip_tags($this->estado));
-        $this->cidade = htmlspecialchars(strip_tags($this->cidade));
-        $this->endereco = htmlspecialchars(strip_tags($this->endereco));
-        $this->telefone = htmlspecialchars(strip_tags($this->telefone));
-
-        // Bind values
-        $stmt->bindParam(":id", $this->id);
-        $stmt->bindParam(":nome_completo", $this->nome_completo);
-        $stmt->bindParam(":email", $this->email);
-        $stmt->bindParam(":data_nascimento", $this->data_nascimento);
-        $stmt->bindParam(":genero", $this->genero);
-        $stmt->bindParam(":cpf", $this->cpf);
-        $stmt->bindParam(":cep", $this->cep);
-        $stmt->bindParam(":estado", $this->estado);
-        $stmt->bindParam(":cidade", $this->cidade);
-        $stmt->bindParam(":endereco", $this->endereco);
-        $stmt->bindParam(":telefone", $this->telefone);
-
-        if($stmt->execute()) {
+        // ✅ APENAS CAMPOS QUE EXISTEM NO FORMULÁRIO DO PERFIL
+        if ($this->nome_completo !== null) {
+            $fields[] = "nome_completo = :nome_completo";
+            $params[':nome_completo'] = htmlspecialchars(strip_tags($this->nome_completo));
+        }
+        
+        if ($this->email !== null) {
+            $fields[] = "email = :email";
+            $params[':email'] = htmlspecialchars(strip_tags($this->email));
+        }
+        
+        if ($this->telefone !== null) {
+            $fields[] = "telefone = :telefone";
+            $params[':telefone'] = htmlspecialchars(strip_tags($this->telefone));
+        }
+        
+        // ✅ SEMPRE ATUALIZAR DATA_ATUALIZACAO
+        $fields[] = "data_atualizacao = CURRENT_TIMESTAMP";
+        
+        // ✅ SE NÃO HÁ CAMPOS PARA ATUALIZAR, RETORNA TRUE
+        if (empty($fields)) {
+            error_log("ℹ️ Nenhum campo para atualizar");
             return true;
         }
+        
+        // ✅ CONSTRUIR QUERY FINAL
+        $query = "UPDATE " . $this->table_name . " SET " . implode(', ', $fields) . " WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        
+        error_log("📝 Query UPDATE: " . $query);
+        
+        // ✅ BIND PARAMS
+        $stmt->bindParam(":id", $this->id);
+        foreach ($params as $key => &$value) {
+            $stmt->bindParam($key, $value);
+        }
+        
+        if($stmt->execute()) {
+            error_log("✅ UPDATE executado com sucesso para usuário ID: " . $this->id);
+            return true;
+        }
+        
+        // ✅ LOG DE ERRO DETALHADO
+        $errorInfo = $stmt->errorInfo();
+        error_log("❌ Erro no UPDATE: " . implode(", ", $errorInfo));
         return false;
     }
 
     // Buscar usuário por ID
-    // No arquivo User.php - função readOne()
     public function readOne() {
-        $query = "SELECT id, nome_completo, email, tipo_usuario, data_nascimento, genero, cpf, cep, estado, cidade, endereco, telefone, data_cadastro 
+        $query = "SELECT id, nome_completo, email, tipo_usuario, avatar_url, data_nascimento, genero, cpf, cep, estado, cidade, endereco, telefone, data_cadastro 
               FROM " . $this->table_name . " 
               WHERE id = :id 
               AND ativo = 1
@@ -170,11 +178,11 @@ class User {
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if($row) {
-            // ✅ IMPORTANTE: Atribuir o ID também
             $this->id = $row['id'];
             $this->nome_completo = $row['nome_completo'];
             $this->email = $row['email'];
             $this->tipo_usuario = $row['tipo_usuario'];
+            $this->avatar_url = $row['avatar_url'];
             $this->data_nascimento = $row['data_nascimento'];
             $this->genero = $row['genero'];
             $this->cpf = $row['cpf'];
@@ -188,6 +196,20 @@ class User {
             return true;
         }
         return false;
+    }
+
+    // Atualizar avatar
+    public function updateAvatar($avatar_url) {
+        $query = "UPDATE " . $this->table_name . " 
+                  SET avatar_url = :avatar_url,
+                      data_atualizacao = CURRENT_TIMESTAMP
+                  WHERE id = :id";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":avatar_url", $avatar_url);
+        $stmt->bindParam(":id", $this->id);
+
+        return $stmt->execute();
     }
 
     // Verificar se CPF já existe
@@ -208,7 +230,7 @@ class User {
         return false;
     }
 
-    // Atualizar senha do usuário
+    // ✅ ATUALIZAR SENHA DO USUÁRIO
     public function updatePassword() {
         $query = "UPDATE " . $this->table_name . " 
                   SET senha = :senha,
@@ -218,15 +240,18 @@ class User {
         
         $stmt = $this->conn->prepare($query);
 
-        // Hash da nova senha
+        // ✅ HASH DA NOVA SENHA
         $this->senha = password_hash($this->senha, PASSWORD_DEFAULT);
 
         $stmt->bindParam(":senha", $this->senha);
         $stmt->bindParam(":id", $this->id);
 
         if($stmt->execute()) {
+            error_log("✅ Senha atualizada para usuário ID: " . $this->id);
             return true;
         }
+        
+        error_log("❌ Erro ao atualizar senha: " . implode(", ", $stmt->errorInfo()));
         return false;
     }
 

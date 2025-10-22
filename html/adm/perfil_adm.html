@@ -10,20 +10,25 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="../../js/componentsAdm.js"></script>
-    <script src="../../js/auth-integration.js"></script>
+    
+ 
 </head>
 <body>
+    <!-- ✅ NAVEGAÇÃO (CARREGADA DINAMICAMENTE) -->
     <nav></nav>
+    
     <div class="admin-container">
         <main class="admin-main">
+            <!-- ✅ CABEÇALHO DO ADMIN -->
             <header class="admin-header">
                 <div class="header-left">
                     <h2><i class="fas fa-user-cog"></i> Meu Perfil</h2>
                 </div>
                 <div class="header-right">
                     <div class="user-dropdown">
-                        <img src="../../img/Chevrolet_Onix.png" alt="Admin">
-                        <span id="adminName">Admin <i class="fas fa-chevron-down"></i></span>
+                        <!-- ✅ AVATAR DINÂMICO -->
+                        <img src="" alt="Admin" id="headerAvatar" style="width: 32px; height: 32px; border-radius: 50%;">
+                        <span id="adminName">Carregando... <i class="fas fa-chevron-down"></i></span>
                         <div class="dropdown-menu">
                             <a href="perfil_adm.html"><i class="fas fa-user"></i> Perfil</a>
                             <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sair</a>
@@ -32,94 +37,225 @@
                 </div>
             </header>
 
+            <!-- ✅ CONTEÚDO PRINCIPAL
             <div class="admin-content">
+                <!-- ✅ ÁREA PARA MENSAGENS (SUCESSO/ERRO) -->
+                <div id="messageContainer" style="display: none;"></div>
+
+                <!-- ✅ CARTÃO DO PERFIL -->
                 <div class="profile-card">
                     <div class="profile-header">
+                        <!-- ✅ UPLOAD DE AVATAR -->
                         <div class="avatar-upload">
-                            <img src="../../img/Chevrolet_Onix.png" alt="Foto do Admin" id="profileAvatar">
-                            <label for="avatarInput" class="btn-upload">
+                            <img src="" alt="Foto do Admin" id="profileAvatar" 
+                                 style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+                            <label for="avatarInput" class="btn-upload" title="Alterar foto">
                                 <i class="fas fa-camera"></i>
                             </label>
-                            <input type="file" id="avatarInput" accept="image/*">
+                            <input type="file" id="avatarInput" accept="image/*" style="display: none;">
                         </div>
-                        <h3 id="profileName">Administrador</h3>
-                        <p id="profileEmail">admin@apolocarros.com.br</p>
+                        <h3 id="profileName">Carregando...</h3>
+                        <p id="profileEmail">carregando@email.com</p>
+                        <p id="profileType" style="color: #007bff; font-weight: 600;">Administrador</p>
                     </div>
 
-                    <form class="profile-form">
+                    <!-- ✅ FORMULÁRIO DE EDIÇÃO -->
+                    <form class="profile-form" method="post">
+                        <!-- ✅ DADOS PESSOAIS -->
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="nome">Nome Completo</label>
-                                <input type="text" id="nome" value="Administrador Apolo">
+                                <label for="nome"><i class="fas fa-user"></i> Nome Completo *</label>
+                                <input type="text" id="nome" name="nome" required 
+                                       placeholder="Seu nome completo">
                             </div>
                             <div class="form-group">
-                                <label for="email">E-mail</label>
-                                <input type="email" id="email" value="admin@apolocarros.com.br">
+                                <label for="email"><i class="fas fa-envelope"></i> E-mail *</label>
+                                <input type="email" id="email" name="email" required 
+                                       placeholder="seu@email.com">
                             </div>
                         </div>
 
+                        <!-- ✅ CONTATO E CARGO -->
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="telefone">Telefone</label>
-                                <input type="tel" id="telefone" value="(11) 99999-9999">
+                                <label for="telefone"><i class="fas fa-phone"></i> Telefone</label>
+                                <input type="tel" id="telefone" name="telefone" 
+                                       placeholder="(11) 99999-9999">
                             </div>
                             <div class="form-group">
-                                <label for="cargo">Cargo</label>
-                                <input type="text" id="cargo" value="Administrador Geral" readonly>
+                                <label for="cargo"><i class="fas fa-briefcase"></i> Cargo</label>
+                                <input type="text" id="cargo" name="cargo" 
+                                       value="Administrador Geral" readonly 
+                                       style="background-color: #f8f9fa;">
                             </div>
                         </div>
 
-                        <h3 class="section-title">Alterar Senha</h3>
+                        <!-- ✅ ALTERAÇÃO DE SENHA -->
+                        <h3 class="section-title"><i class="fas fa-lock"></i> Alterar Senha</h3>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="senha-atual">Senha Atual</label>
-                                <input type="password" id="senha-atual">
+                                <label for="senha-atual"><i class="fas fa-key"></i> Senha Atual</label>
+                                <input type="password" id="senha-atual" name="senha_atual" 
+                                       placeholder="Digite sua senha atual">
                             </div>
                             <div class="form-group">
-                                <label for="nova-senha">Nova Senha</label>
-                                <input type="password" id="nova-senha">
+                                <label for="nova-senha"><i class="fas fa-key"></i> Nova Senha</label>
+                                <input type="password" id="nova-senha" name="nova_senha" 
+                                       placeholder="Digite a nova senha">
                             </div>
                         </div>
 
+                        <!-- ✅ BOTÕES DE AÇÃO -->
                         <div class="form-actions">
-                            <button type="button" class="btn btn-outline">Cancelar</button>
-                            <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                            <button type="button" class="btn btn-outline" id="cancelBtn">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-primary" id="saveBtn">
+                                <i class="fas fa-save"></i> Salvar Alterações
+                            </button>
                         </div>
                     </form>
                 </div>
+
+                <!-- ✅ INFORMAÇÕES ADICIONAIS DA CONTA -->
+                <div class="profile-card" style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 20px; color: #333;">
+                        <i class="fas fa-info-circle"></i> Informações da Conta
+                    </h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Data de Cadastro</label>
+                            <input type="text" id="dataCadastro" readonly 
+                                   style="background-color: #f8f9fa;">
+                        </div>
+                        <div class="form-group">
+                            <label>Status da Conta</label>
+                            <input type="text" value="Ativa" readonly 
+                                   style="color: #28a745; background-color: #f8f9fa;">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Última Atualização</label>
+                            <input type="text" id="ultimaAtualizacao" readonly 
+                                   style="background-color: #f8f9fa;">
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo de Usuário</label>
+                            <input type="text" id="tipoUsuario" value="Administrador" readonly 
+                                   style="color: #007bff; background-color: #f8f9fa;">
+                        </div>
+                    </div>
+                </div>
+                <!-- ✅ BOTÃO DE DEBUG (APENAS PARA DESENVOLVIMENTO)
+                <div class="profile-card" style="margin-top: 20px; background-color: #f8f9fa; border: 1px dashed #dc3545;">
+                    <h3 style="margin-bottom: 20px; color: #dc3545;">
+                        <i class="fas fa-bug"></i> Debug - Desenvolvimento
+                    </h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Senha Atual (Hash no BD)</label>
+                            <input type="text" id="debugSenhaHash" readonly style="font-family: monospace; font-size: 12px;">
+                        </div>
+                        <div class="form-group">
+                            <label>ID do Usuário (Sessão)</label>
+                            <input type="text" id="debugUserId" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Testar Senha Manual</label>
+                            <input type="password" id="debugSenhaTeste" placeholder="Digite 'password' para testar">
+                        </div>
+                        <div class="form-group">
+                            <label style="color: transparent;">.</label>
+                            <button type="button" class="btn btn-warning" id="debugTestarSenha">
+                                <i class="fas fa-vial"></i> Testar Senha
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions" style="border-top: 1px dashed #ccc; padding-top: 15px;">
+                        <button type="button" class="btn btn-info" id="debugVerDados">
+                            <i class="fas fa-eye"></i> Ver Dados Completos
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="debugVerSessao">
+                            <i class="fas fa-user-secret"></i> Ver Sessão
+                        </button>
+                        <button type="button" class="btn btn-danger" id="debugResetSenha">
+                            <i class="fas fa-key"></i> Resetar para "password"
+                        </button>
+                        <button type="button" class="btn btn-danger" id="debugEmergencyFix">
+                    <i class="fas fa-fire-extinguisher"></i> Correção de Emergência
+                </button>
+                <button type="button" class="btn btn-primary" id="debugTestarFluxo">
+                    <i class="fas fa-play-circle"></i> Testar Fluxo Completo
+                </button>
+                    </div>
+                    
+                     ✅ ÁREA DE LOGS DE DEBUG 
+                    <div id="debugLogs" style="margin-top: 15px; padding: 10px; background: #fff; border-radius: 4px; border: 1px solid #ddd; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; display: none;">
+                        <strong>Logs de Debug:</strong>
+                        <div id="debugLogsContent"></div>
+                    </div>-->
+                </div>  
             </div>
         </main>
     </div>
 
-    <script>
-        // ✅ VERIFICAÇÃO DE ADMIN E CARREGAMENTO DE DADOS
-        document.addEventListener('DOMContentLoaded', function() {
-            const userData = AuthService.getUserData();
-            
-            if (userData && userData.tipo_usuario === 'admin') {
-                // Preencher dados do usuário
-                document.getElementById('adminName').innerHTML = 
-                    `${userData.nome_completo} <i class="fas fa-chevron-down"></i>`;
-                document.getElementById('profileName').textContent = userData.nome_completo;
-                document.getElementById('profileEmail').textContent = userData.email;
-                document.getElementById('nome').value = userData.nome_completo;
-                document.getElementById('email').value = userData.email;
-                
-                if (userData.telefone) {
-                    document.getElementById('telefone').value = userData.telefone;
-                }
-            } else {
-                alert('Acesso restrito a administradores.');
-                window.location.href = '../../html/login.html';
-                return;
-            }
+    <!-- ✅ SCRIPTS -->
+    <script src="../../js/auth-integration.js"></script>
+    <script src="../../js/photo-upload.js"></script>
+    <script src="../../js/perfil_adm.js"></script>
 
-            // ✅ EVENT LISTENER PARA LOGOUT
-            document.getElementById('logoutBtn').addEventListener('click', function(e) {
-                e.preventDefault();
-                AuthService.logout();
-            });
+    <script>
+        // ✅ FUNÇÃO PARA EXIBIR MENSAGENS
+        function showMessage(message, type = 'success') {
+            const container = document.getElementById('messageContainer');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            
+            container.innerHTML = `
+                <div class="alert ${alertClass}">
+                    <i class="fas ${icon}"></i>
+                    ${message}
+                </div>
+            `;
+            container.style.display = 'block';
+            
+            // ✅ OCULTAR MENSAGEM APÓS 5 SEGUNDOS
+            setTimeout(() => {
+                container.style.display = 'none';
+            }, 5000);
+            
+            console.log(`📢 Mensagem [${type}]: ${message}`);
+        }
+
+        // ✅ FUNÇÃO PARA MOSTRAR LOADING NO BOTÃO
+        function setButtonLoading(button, loading) {
+            if (loading) {
+                button.disabled = true;
+                button.innerHTML = '<span class="loading"></span> Salvando...';
+                console.log('⏳ Botão em estado de loading...');
+            } else {
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-save"></i> Salvar Alterações';
+                console.log('✅ Botão restaurado ao estado normal');
+            }
+        }
+
+        // ✅ EVENT LISTENER PARA O BOTÃO CANCELAR
+        document.getElementById('cancelBtn').addEventListener('click', function() {
+            if (confirm('Tem certeza que deseja descartar todas as alterações?')) {
+                console.log('🔄 Recarregando página...');
+                window.location.reload();
+            }
         });
+
+        // ✅ LOG INICIAL
+        console.log('🚀 Página perfil_adm.html carregada com sucesso!');
     </script>
 </body>
 </html>

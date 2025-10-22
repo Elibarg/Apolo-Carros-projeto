@@ -9,10 +9,25 @@ header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers
 ini_set('display_errors', 0);
 error_reporting(0);
 
+// ✅ INICIAR SESSÃO
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 include_once '../config/database.php';
 include_once '../models/User.php';
 
 try {
+    // ✅ VERIFICAR SE USUÁRIO ESTÁ LOGADO
+    if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+        http_response_code(401);
+        echo json_encode(array(
+            "success" => false, 
+            "message" => "Usuário não autenticado."
+        ));
+        exit;
+    }
+
     $database = new Database();
     $db = $database->getConnection();
 
@@ -22,19 +37,8 @@ try {
 
     $user = new User($db);
 
-    // ✅ OBTER ID DO USUÁRIO DA URL
-    $user_id = isset($_GET['id']) ? $_GET['id'] : null;
-
-    if (!$user_id) {
-        http_response_code(400);
-        echo json_encode(array(
-            "success" => false, 
-            "message" => "ID do usuário não fornecido."
-        ));
-        exit;
-    }
-
-    $user->id = $user_id;
+    // ✅ USAR ID DA SESSÃO
+    $user->id = $_SESSION['user_id'];
     
     // ✅ BUSCAR DADOS COMPLETOS DO USUÁRIO
     if ($user->readOne()) {
@@ -46,6 +50,7 @@ try {
                 "nome_completo" => $user->nome_completo,
                 "email" => $user->email,
                 "tipo_usuario" => $user->tipo_usuario,
+                "avatar_url" => $user->avatar_url,
                 "data_nascimento" => $user->data_nascimento,
                 "genero" => $user->genero,
                 "cpf" => $user->cpf,

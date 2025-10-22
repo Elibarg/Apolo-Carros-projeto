@@ -21,6 +21,9 @@ CREATE TABLE IF NOT EXISTS usuarios (
     senha VARCHAR(255) NOT NULL,
     tipo_usuario ENUM('admin', 'usuario') DEFAULT 'usuario',
     
+    -- Avatar/Foto de perfil
+    avatar_url VARCHAR(255) DEFAULT NULL,
+    
     -- Dados pessoais
     data_nascimento DATE,
     genero ENUM('male', 'female', 'other', 'prefer_not_say'),
@@ -59,6 +62,7 @@ INSERT INTO usuarios (
     email, 
     senha, 
     tipo_usuario,
+    avatar_url,
     data_nascimento,
     genero,
     cpf,
@@ -72,6 +76,7 @@ INSERT INTO usuarios (
     'admin@apolocarros.com', 
     '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',  -- password
     'admin',
+    '/Apolo-Carros-projeto/img/avatars/admin-avatar.jpg',
     '1985-03-15',
     'male',
     '123.456.789-00',
@@ -87,6 +92,7 @@ INSERT INTO usuarios (
     nome_completo, 
     email, 
     senha, 
+    avatar_url,
     data_nascimento,
     genero,
     cpf,
@@ -100,6 +106,7 @@ INSERT INTO usuarios (
     'João Silva Santos', 
     'joao.silva@email.com', 
     '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',  -- password
+    '/Apolo-Carros-projeto/img/avatars/user1.jpg',
     '1990-05-15',
     'male',
     '987.654.321-00',
@@ -113,6 +120,7 @@ INSERT INTO usuarios (
     'Maria Oliveira Souza', 
     'maria.oliveira@email.com', 
     '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',  -- password
+    '/Apolo-Carros-projeto/img/avatars/user2.jpg',
     '1988-08-20',
     'female',
     '111.222.333-44',
@@ -126,6 +134,7 @@ INSERT INTO usuarios (
     'Pedro Costa Lima', 
     'pedro.costa@email.com', 
     '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',  -- password
+    NULL,
     '1995-12-10',
     'male',
     '555.666.777-88',
@@ -134,45 +143,6 @@ INSERT INTO usuarios (
     'Belo Horizonte',
     'Avenida do Contorno, 3000 - Centro',
     '(31) 96655-4433'
-),
-(
-    'Ana Paula Rodrigues', 
-    'ana.rodrigues@email.com', 
-    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',  -- password
-    '1992-03-25',
-    'female',
-    '999.888.777-66',
-    '80010-000',
-    'PR',
-    'Curitiba',
-    'Rua XV de Novembro, 100 - Centro',
-    '(41) 95544-3322'
-),
-(
-    'Carlos Eduardo Martins', 
-    'carlos.martins@email.com', 
-    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',  -- password
-    '1987-11-30',
-    'male',
-    '444.555.666-77',
-    '50010-000',
-    'PE',
-    'Recife',
-    'Rua do Bom Jesus, 200 - Recife Antigo',
-    '(81) 94433-2211'
-),
-(
-    'Fernanda Lima Costa', 
-    'fernanda.lima@email.com', 
-    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',  -- password
-    '1993-07-08',
-    'female',
-    '333.222.111-00',
-    '90010-000',
-    'RS',
-    'Porto Alegre',
-    'Avenida Borges de Medeiros, 1500 - Centro Histórico',
-    '(51) 93322-1100'
 );
 -- =============================================
 -- FIM DO SCRIPT
