@@ -225,8 +225,10 @@ class PerfilAdmin {
             if (result.success) {
                 showMessage('✅ Foto de perfil atualizada com sucesso!', 'success');
                 
-                // Atualizar avatar no header também
-                document.getElementById('headerAvatar').src = result.avatar_url;
+                // ✅ ATUALIZAR AVATAR NO HEADER TAMBÉM
+                this.userData.avatar_url = result.avatar_url;
+                AuthService.updateUserData(this.userData);
+                this.atualizarHeader();
                 
             } else {
                 showMessage('❌ Erro ao salvar foto: ' + result.message, 'error');
@@ -399,7 +401,7 @@ class PerfilAdmin {
     }
 
     // ✅ ATUALIZAR DADOS DO USUÁRIO NO SERVIDOR
-    async atualizarDadosUsuario(dados) {
+ async atualizarDadosUsuario(dados) {
         try {
             const url = `${this.baseUrl}/backend/api/update_user.php`;
             
@@ -439,6 +441,9 @@ class PerfilAdmin {
                 // ✅ ATUALIZAR NO LOCALSTORAGE
                 AuthService.updateUserData(this.userData);
                 
+                // ✅ ATUALIZAR HEADER EM TODAS AS PÁGINAS
+                this.atualizarHeader();
+                
                 // ✅ RECARREGAR DADOS COMPLETOS
                 this.carregarDadosCompletos();
                 
@@ -457,6 +462,20 @@ class PerfilAdmin {
         }
     }
 
+    atualizarHeader() {
+        if (window.AdminComponents && typeof window.AdminComponents.updateHeaderInfo === 'function') {
+            window.AdminComponents.updateHeaderInfo();
+        } else {
+            // Fallback: recarregar dados manualmente
+            const userData = AuthService.getUserData();
+            if (userData) {
+                $('#adminName').html(`${userData.nome_completo} <i class="fas fa-chevron-down"></i>`);
+                if (userData.avatar_url) {
+                    $('#headerAvatar').attr('src', userData.avatar_url);
+                }
+            }
+        }
+    }
     // =============================================
     // ✅ SEÇÃO DE DEBUG - FERRAMENTAS DE DESENVOLVIMENTO
     // =============================================

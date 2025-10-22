@@ -21,16 +21,6 @@
                         <span>Adicionar</span>
                     </nav>
                 </div>
-                 <div class="header-right">
-                    <div class="user-dropdown">
-                        <img src="../../img/Chevrolet_Onix.png" alt="Admin">
-                        <span id="adminName">Admin <i class="fas fa-chevron-down"></i></span>
-                        <div class="dropdown-menu">
-                            <a href="perfil_adm.html"><i class="fas fa-user"></i> Perfil</a>
-                            <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Sair</a>
-                        </div>
-                    </div>
-                </div>
             </header>
 
             <div class="admin-content">
@@ -94,19 +84,5 @@
             </div>
         </main>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const userData = AuthService.getUserData();
-            
-            if (userData && userData.tipo_usuario === 'admin') {
-                document.getElementById('adminName').innerHTML = 
-                    `${userData.nome_completo} <i class="fas fa-chevron-down"></i>`;
-            } else {
-                alert('Acesso restrito a administradores.');
-                window.location.href = '../../html/login.html';
-            }
-        });
-    </script>
 </body>
 </html>
