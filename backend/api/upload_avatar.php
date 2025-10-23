@@ -103,4 +103,18 @@ try {
         "message" => "Erro interno do servidor: " . $e->getMessage()
     ]);
 }
+// ✅ ATUALIZAR A SESSÃO COM A NOVA URL DO AVATAR
+$_SESSION['user_avatar'] = $caminhoRelativo;
+
+http_response_code(200);
+echo json_encode([
+    "success" => true, 
+    "message" => "Avatar atualizado com sucesso.",
+    "avatar_url" => $caminhoRelativo,
+    "debug" => [
+        "user_id" => $user->id,
+        "file_path" => $caminhoCompleto,
+        "web_path" => $caminhoRelativo
+    ]
+]);
 ?>

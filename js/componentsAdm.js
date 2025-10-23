@@ -1,4 +1,4 @@
-// js/componentsAdm.js - VERSÃO ATUALIZADA COM HEADER
+// js/componentsAdm.js - VERSÃO COMPLETA CORRIGIDA
 $(document).ready(function () {
     console.log('🚀 Iniciando carregamento do admin...');
     
@@ -43,6 +43,9 @@ function loadHeader() {
 function initializeAdmin() {
     console.log('🎯 Inicializando funcionalidades do admin...');
     
+    // ✅ SINCRONIZAR DADOS DO USUÁRIO COM API
+    syncUserDataWithAPI();
+    
     // ✅ TOGGLE DO MENU MOBILE
     $(document).on('click', '.menu-toggle', function() {
         console.log('📱 Abrindo/fechando menu mobile');
@@ -79,8 +82,71 @@ function initializeAdmin() {
     console.log('✅ Admin inicializado com sucesso!');
 }
 
-// ✅ ATUALIZAR INFORMAÇÕES DO HEADER
-function updateHeaderInfo() {
+// ✅ SISTEMA DE FALLBACK PARA IMAGENS
+function loadImageWithFallback(imgElement, imageUrl, fallbackUrl) {
+    return new Promise((resolve) => {
+        if (!imageUrl) {
+            imgElement.src = fallbackUrl;
+            resolve(false);
+            return;
+        }
+        
+        // ✅ CORRIGIR CAMINHO RELATIVO SE NECESSÁRIO
+        let finalImageUrl = imageUrl;
+        if (imageUrl.startsWith('/Apolo-Carros-projeto/')) {
+            // Já está no formato correto
+        } else if (imageUrl.startsWith('/')) {
+            finalImageUrl = '/Apolo-Carros-projeto' + imageUrl;
+        } else if (!imageUrl.startsWith('http')) {
+            finalImageUrl = '/Apolo-Carros-projeto/' + imageUrl;
+        }
+        
+        const img = new Image();
+        img.onload = function() {
+            imgElement.src = finalImageUrl;
+            console.log('✅ Avatar carregado com sucesso:', finalImageUrl);
+            resolve(true);
+        };
+        img.onerror = function() {
+            console.warn('❌ Imagem não carregada, usando fallback:', finalImageUrl);
+            imgElement.src = fallbackUrl;
+            resolve(false);
+        };
+        img.src = finalImageUrl;
+    });
+}
+
+// ✅ SINCRONIZAR DADOS DO USUÁRIO COM API
+async function syncUserDataWithAPI() {
+    try {
+        console.log('🔄 Sincronizando dados do usuário com API...');
+        
+        const response = await fetch('../../backend/api/get_user.php', {
+            method: 'GET',
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+                // ✅ ATUALIZAR LOCALSTORAGE COM DADOS FRESCOS
+                AuthService.updateUserData(result.data);
+                console.log('✅ Dados sincronizados com API');
+                
+                // ✅ ATUALIZAR HEADER IMEDIATAMENTE
+                updateHeaderInfo();
+                return true;
+            }
+        }
+        return false;
+    } catch (error) {
+        console.error('❌ Erro na sincronização:', error);
+        return false;
+    }
+}
+
+// ✅ ATUALIZAR INFORMAÇÕES DO HEADER (VERSÃO CORRIGIDA)
+async function updateHeaderInfo() {
     const userData = AuthService.getUserData();
     
     if (userData) {
@@ -89,95 +155,133 @@ function updateHeaderInfo() {
         // ✅ ATUALIZAR NOME DO USUÁRIO
         $('#adminName').html(`${userData.nome_completo} <i class="fas fa-chevron-down"></i>`);
         
-        // ✅ ATUALIZAR AVATAR (se existir)
-        if (userData.avatar_url) {
-            $('#headerAvatar').attr('src', userData.avatar_url);
+        // ✅ ATUALIZAR AVATAR COM FALLBACK E VERIFICAÇÃO
+        const headerAvatar = document.getElementById('headerAvatar');
+        if (headerAvatar) {
+            const success = await loadImageWithFallback(
+                headerAvatar,
+                userData.avatar_url,
+                '../../img/avatars/default-avatar.jpg'
+            );
+            
+            if (!success && userData.avatar_url) {
+                console.warn('⚠️ Avatar URL inválida:', userData.avatar_url);
+                
+                // ✅ TENTAR SINCRONIZAR NOVAMENTE SE O AVATAR FALHOU
+                setTimeout(() => {
+                    syncUserDataWithAPI();
+                }, 1000);
+            }
+        } else {
+            console.warn('⚠️ Elemento headerAvatar não encontrado');
         }
         
         // ✅ ATUALIZAR TÍTULO DA PÁGINA E BREADCRUMB
         updatePageTitleAndBreadcrumb();
     } else {
         console.warn('⚠️ Nenhum usuário logado encontrado');
+        
+        // ✅ TENTAR SINCRONIZAR SE NÃO HÁ DADOS
+        setTimeout(() => {
+            syncUserDataWithAPI();
+        }, 500);
     }
 }
 
 // ✅ ATUALIZAR TÍTULO E BREADCRUMB BASEADO NA PÁGINA ATUAL
 function updatePageTitleAndBreadcrumb() {
     const currentPage = window.location.pathname.split('/').pop();
+    
     const pageConfig = {
         'painel_de_vendas.html': {
             title: 'Dashboard',
             icon: 'fas fa-chart-line',
-            breadcrumb: ['Dashboard']
+            breadcrumb: [] // ✅ CORRIGIDO: array vazio
         },
         'estoque.html': {
             title: 'Estoque de Veículos',
             icon: 'fas fa-car',
-            breadcrumb: ['Estoque']
+            breadcrumb: [] // ✅ CORRIGIDO: array vazio
         },
         'editar_estoque.html': {
             title: 'Editar Veículo',
             icon: 'fas fa-edit',
-            breadcrumb: ['Estoque', 'Editar']
+            breadcrumb: ['Estoque', 'Editar'] // ✅ CORRIGIDO: textos normais
         },
         'adicionar_carros.html': {
             title: 'Adicionar Veículo',
             icon: 'fas fa-plus',
-            breadcrumb: ['Estoque', 'Adicionar']
+            breadcrumb: ['Estoque', 'Adicionar'] // ✅ CORRIGIDO: textos normais
         },
         'clientes.html': {
             title: 'Usuários',
             icon: 'fas fa-users',
-            breadcrumb: ['Usuários']
+            breadcrumb: [] // ✅ CORRIGIDO: array vazio
         },
         'editar_cliente.html': {
             title: 'Editar Usuário',
             icon: 'fas fa-user-edit',
-            breadcrumb: ['Usuários', 'Editar']
+            breadcrumb: ['Usuários', 'Editar'] // ✅ CORRIGIDO: textos normais
         },
         'adicionar_clientes.html': {
             title: 'Adicionar Usuário',
             icon: 'fas fa-user-plus',
-            breadcrumb: ['Usuários', 'Adicionar']
+            breadcrumb: ['Usuários', 'Adicionar'] // ✅ CORRIGIDO: textos normais
         },
         'perfil_adm.html': {
             title: 'Meu Perfil',
             icon: 'fas fa-user',
-            breadcrumb: ['Perfil']
+            breadcrumb: [] // ✅ CORRIGIDO: array vazio
         }
     };
-    
+
     const config = pageConfig[currentPage] || {
-        title: 'Dashboard',
+        title: 'Painel Admin',
         icon: 'fas fa-home',
-        breadcrumb: ['Dashboard']
+        breadcrumb: [] // ✅ CORRIGIDO: array vazio
     };
     
     // ✅ ATUALIZAR TÍTULO
-    $('#pageTitle').html(`<i class="${config.icon}"></i> ${config.title}`);
+    const pageTitleElement = document.getElementById('pageTitle');
+    if (pageTitleElement) {
+        pageTitleElement.innerHTML = `<i class="${config.icon}"></i> ${config.title}`;
+    }
     
-    // ✅ ATUALIZAR BREADCRUMB
+    // ✅ ATUALIZAR BREADCRUMB (APENAS SE HOUVER ITENS)
     updateBreadcrumb(config.breadcrumb);
 }
 
-// ✅ ATUALIZAR BREADCRUMB
+// ✅ ATUALIZAR BREADCRUMB (VERSÃO CORRIGIDA)
 function updateBreadcrumb(items) {
-    const breadcrumbHtml = items.map((item, index) => {
-        if (index === items.length - 1) {
-            return `<span>${item}</span>`;
-        } else {
-            // Links para páginas anteriores (simplificado)
-            let link = '#';
-            if (item === 'Estoque') link = 'estoque.html';
-            if (item === 'Usuários') link = 'clientes.html';
-            if (item === 'Dashboard') link = 'painel_de_vendas.html';
-            if (item === 'Perfil') link = 'perfil_adm.html';
-            
-            return `<a href="${link}">${item}</a><i class="fas fa-chevron-right"></i>`;
-        }
-    }).join('');
+    const breadcrumbElement = document.getElementById('breadcrumb');
+    if (!breadcrumbElement) return;
     
-    $('#breadcrumb').html(breadcrumbHtml);
+    // ✅ SE O ARRAY ESTIVER VAZIO, ESCONDER O BREADCRUMB
+    if (!items || items.length === 0 || (items.length === 1 && items[0] === '')) {
+        breadcrumbElement.style.display = 'none';
+        return;
+    }
+    
+    // ✅ MOSTRAR O BREADCRUMB SE HOUVER ITENS VÁLIDOS
+    breadcrumbElement.style.display = 'flex';
+    
+    const breadcrumbHtml = items
+        .filter(item => item !== '') // ✅ FILTRAR STRINGS VAZIAS
+        .map((item, index) => {
+            if (index === items.length - 1) {
+                return `<span>${item}</span>`;
+            } else {
+                let link = '#';
+                if (item === 'Estoque') link = 'estoque.html';
+                if (item === 'Usuários') link = 'clientes.html';
+                if (item === 'Dashboard') link = 'painel_de_vendas.html';
+                if (item === 'Perfil') link = 'perfil_adm.html';
+                
+                return `<a href="${link}">${item}</a><i class="fas fa-chevron-right"></i>`;
+            }
+        }).join('');
+    
+    breadcrumbElement.innerHTML = breadcrumbHtml;
 }
 
 function createFallbackMenu() {
@@ -210,11 +314,14 @@ function createFallbackHeader() {
                     <i class="fas fa-bars"></i>
                     <span>Menu</span>
                 </div>
-                <h2><i class="fas fa-home"></i> Painel Admin</h2>
+                <h2 id="pageTitle"><i class="fas fa-home"></i> Painel Admin</h2>
+                <nav class="breadcrumb" id="breadcrumb">
+                    <span>Dashboard</span>
+                </nav>
             </div>
             <div class="header-right">
                 <div class="user-dropdown">
-                    <img src="../../img/avatars/default-avatar.jpg" alt="Admin">
+                    <img id="headerAvatar" src="../../img/avatars/default-avatar.jpg" alt="Admin" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
                     <span id="adminName">Admin <i class="fas fa-chevron-down"></i></span>
                     <div class="dropdown-menu">
                         <a href="perfil_adm.html"><i class="fas fa-user"></i> Perfil</a>
@@ -228,8 +335,35 @@ function createFallbackHeader() {
     updateHeaderInfo();
 }
 
+// ✅ DIAGNÓSTICO DE AVATAR (para debugging)
+function diagnoseAvatar() {
+    const userData = AuthService.getUserData();
+    console.group('🔍 DIAGNÓSTICO DO AVATAR');
+    console.log('📁 Dados do usuário:', userData);
+    console.log('🖼️ Avatar URL:', userData?.avatar_url);
+    console.log('📍 Caminho completo:', window.location.origin + (userData?.avatar_url || ''));
+    console.log('👤 User ID:', userData?.id);
+    console.groupEnd();
+    
+    // Testar carregamento da imagem
+    if (userData?.avatar_url) {
+        const testImg = new Image();
+        testImg.onload = () => console.log('✅ Avatar carrega corretamente');
+        testImg.onerror = () => console.log('❌ Erro ao carregar avatar');
+        testImg.src = userData.avatar_url;
+    }
+    
+    // Forçar sincronização
+    syncUserDataWithAPI();
+}
+
 // ✅ EXPORTAR FUNÇÕES PARA USO EXTERNO
 window.AdminComponents = {
     updateHeaderInfo: updateHeaderInfo,
-    updatePageTitleAndBreadcrumb: updatePageTitleAndBreadcrumb
+    updatePageTitleAndBreadcrumb: updatePageTitleAndBreadcrumb,
+    syncUserDataWithAPI: syncUserDataWithAPI,
+    diagnoseAvatar: diagnoseAvatar
 };
+
+// ✅ INICIALIZAÇÃO GLOBAL
+window.updateAdminHeader = updateHeaderInfo;

@@ -462,18 +462,50 @@ class PerfilAdmin {
         }
     }
 
+    // ✅ ATUALIZAR HEADER EM TODAS AS PÁGINAS (VERSÃO CORRIGIDA)
     atualizarHeader() {
+        console.log('🔄 Atualizando header em todas as páginas...');
+        
+        // ✅ ATUALIZAR LOCALSTORAGE PRIMEIRO
+        AuthService.updateUserData(this.userData);
+        
+        // ✅ USAR AdminComponents SE DISPONÍVEL
         if (window.AdminComponents && typeof window.AdminComponents.updateHeaderInfo === 'function') {
             window.AdminComponents.updateHeaderInfo();
+            console.log('✅ Header atualizado via AdminComponents');
         } else {
-            // Fallback: recarregar dados manualmente
+            // ✅ FALLBACK: ATUALIZAR MANUALMENTE
+            console.log('🔄 Usando fallback para atualizar header');
             const userData = AuthService.getUserData();
             if (userData) {
-                $('#adminName').html(`${userData.nome_completo} <i class="fas fa-chevron-down"></i>`);
-                if (userData.avatar_url) {
-                    $('#headerAvatar').attr('src', userData.avatar_url);
+                // ✅ ATUALIZAR NOME
+                const adminNameElement = document.getElementById('adminName');
+                if (adminNameElement) {
+                    adminNameElement.innerHTML = `${userData.nome_completo} <i class="fas fa-chevron-down"></i>`;
+                }
+                
+                // ✅ ATUALIZAR AVATAR COM VERIFICAÇÃO
+                const headerAvatar = document.getElementById('headerAvatar');
+                if (headerAvatar && userData.avatar_url) {
+                    const testImg = new Image();
+                    testImg.onload = () => {
+                        headerAvatar.src = userData.avatar_url;
+                        console.log('✅ Avatar do header atualizado:', userData.avatar_url);
+                    };
+                    testImg.onerror = () => {
+                        console.warn('❌ Erro ao carregar avatar no header, usando fallback');
+                        headerAvatar.src = '../../img/avatars/default-avatar.jpg';
+                    };
+                    testImg.src = userData.avatar_url;
                 }
             }
+        }
+        
+        // ✅ FORÇAR SINCRONIZAÇÃO COM API
+        if (window.AdminComponents && typeof window.AdminComponents.syncUserDataWithAPI === 'function') {
+            setTimeout(() => {
+                window.AdminComponents.syncUserDataWithAPI();
+            }, 500);
         }
     }
     // =============================================
