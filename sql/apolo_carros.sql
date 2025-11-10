@@ -6,7 +6,8 @@
 -- Tempo de geração: 10/11/2025 às 02:57
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
-
+CREATE DATABASE IF NOT EXISTS `apolo_carros` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `apolo_carros`;
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
