@@ -80,7 +80,6 @@ class User {
         $query = "SELECT id, nome_completo, senha, tipo_usuario, avatar_url, data_nascimento, genero, cpf, cep, estado, cidade, endereco, telefone 
                   FROM " . $this->table_name . " 
                   WHERE email = :email 
-                  AND ativo = 1
                   LIMIT 0,1";
 
         $stmt = $this->conn->prepare($query);
@@ -168,7 +167,6 @@ class User {
         $query = "SELECT id, nome_completo, email, tipo_usuario, avatar_url, data_nascimento, genero, cpf, cep, estado, cidade, endereco, telefone, data_cadastro 
               FROM " . $this->table_name . " 
               WHERE id = :id 
-              AND ativo = 1
               LIMIT 0,1";
 
         $stmt = $this->conn->prepare($query);
@@ -217,7 +215,6 @@ class User {
         $query = "SELECT id 
                   FROM " . $this->table_name . " 
                   WHERE cpf = :cpf 
-                  AND ativo = 1
                   LIMIT 0,1";
 
         $stmt = $this->conn->prepare($query);
@@ -235,8 +232,7 @@ class User {
         $query = "UPDATE " . $this->table_name . " 
                   SET senha = :senha,
                       data_atualizacao = CURRENT_TIMESTAMP
-                  WHERE id = :id
-                  AND ativo = 1";
+                  WHERE id = :id";
         
         $stmt = $this->conn->prepare($query);
 
@@ -260,7 +256,6 @@ class User {
         $query = "SELECT id, nome_completo, email, cidade, telefone 
                   FROM " . $this->table_name . " 
                   WHERE estado = :estado 
-                  AND ativo = 1
                   ORDER BY nome_completo";
 
         $stmt = $this->conn->prepare($query);
@@ -274,7 +269,6 @@ class User {
     public function readAll($from_record_num = 0, $records_per_page = 10) {
         $query = "SELECT id, nome_completo, email, tipo_usuario, cidade, estado, data_cadastro 
                   FROM " . $this->table_name . " 
-                  WHERE ativo = 1
                   ORDER BY data_cadastro DESC
                   LIMIT :from_record_num, :records_per_page";
 
@@ -289,8 +283,7 @@ class User {
     // Contar total de usuários
     public function countAll() {
         $query = "SELECT COUNT(*) as total_rows 
-                  FROM " . $this->table_name . " 
-                  WHERE ativo = 1";
+                  FROM " . $this->table_name;
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -299,39 +292,19 @@ class User {
         return $row['total_rows'];
     }
 
-    // ✅ MÉTODO DEACTIVATE CORRIGIDO
-    public function deactivate() {
-        $query = "UPDATE " . $this->table_name . " 
-                  SET ativo = 0,
-                      data_atualizacao = CURRENT_TIMESTAMP
-                  WHERE id = :id
-                  AND ativo = 1"; // ✅ Só desativa se estiver ativo
-
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":id", $this->id);
-
-        if($stmt->execute()) {
-            error_log("✅ Usuário ID {$this->id} desativado com sucesso");
-            return $stmt->rowCount() > 0; // ✅ Retorna true se alguma linha foi afetada
-        }
+    // ✅ MÉTODO DELETE PARA EXCLUSÃO FÍSICA
+    public function delete() {
+        $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";
         
-        error_log("❌ Erro ao desativar usuário ID {$this->id}: " . implode(", ", $stmt->errorInfo()));
-        return false;
-    }
-
-    // Reativar usuário
-    public function reactivate() {
-        $query = "UPDATE " . $this->table_name . " 
-                  SET ativo = 1,
-                      data_atualizacao = CURRENT_TIMESTAMP
-                  WHERE id = :id";
-
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":id", $this->id);
 
         if($stmt->execute()) {
+            error_log("✅ Usuário ID {$this->id} EXCLUÍDO permanentemente do banco");
             return true;
         }
+        
+        error_log("❌ Erro ao excluir usuário ID {$this->id}: " . implode(", ", $stmt->errorInfo()));
         return false;
     }
 
@@ -340,7 +313,6 @@ class User {
         $query = "SELECT id, nome_completo, email, tipo_usuario, data_nascimento, cidade, estado 
                   FROM " . $this->table_name . " 
                   WHERE cpf = :cpf 
-                  AND ativo = 1
                   LIMIT 0,1";
 
         $stmt = $this->conn->prepare($query);
@@ -367,8 +339,7 @@ class User {
     public function readByCity($cidade, $estado = null) {
         $query = "SELECT id, nome_completo, email, telefone 
                   FROM " . $this->table_name . " 
-                  WHERE cidade = :cidade 
-                  AND ativo = 1";
+                  WHERE cidade = :cidade";
         
         if ($estado) {
             $query .= " AND estado = :estado";
@@ -393,7 +364,6 @@ class User {
         $query = "SELECT id 
                   FROM " . $this->table_name . " 
                   WHERE telefone = :telefone 
-                  AND ativo = 1
                   AND id != :id
                   LIMIT 0,1";
 
@@ -422,7 +392,6 @@ class User {
                     estado,
                     COUNT(*) as total_por_estado
                   FROM " . $this->table_name . " 
-                  WHERE ativo = 1
                   GROUP BY estado
                   ORDER BY total_por_estado DESC";
 
@@ -436,7 +405,6 @@ class User {
     public function getRecentUsers($limit = 5) {
         $query = "SELECT id, nome_completo, email, cidade, estado, data_cadastro 
                   FROM " . $this->table_name . " 
-                  WHERE ativo = 1
                   ORDER BY data_cadastro DESC
                   LIMIT :limit";
 

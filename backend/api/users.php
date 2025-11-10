@@ -1,5 +1,5 @@
 <?php
-// Arquivo: backend/api/users.php (VERSÃO CORRIGIDA)
+// Arquivo: backend/api/users.php
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
@@ -190,9 +190,7 @@ try {
             break;
 
         case 'DELETE':
-            // ✅ EXCLUSÃO CORRIGIDA
-            error_log("🗑️ Tentativa de exclusão - User ID: " . ($_GET['id'] ?? 'NULL'));
-            
+            // ✅ EXCLUSÃO FÍSICA CORRIGIDA
             $user_id = $_GET['id'] ?? null;
 
             if (!$user_id) {
@@ -217,15 +215,13 @@ try {
                 break;
             }
 
-            // ✅ EXECUTAR EXCLUSÃO LÓGICA
-            if ($user->deactivate()) {
-                error_log("✅ Usuário ID {$user_id} excluído com sucesso");
+            // ✅ EXECUTAR EXCLUSÃO FÍSICA
+            if ($user->delete()) {
                 echo json_encode([
                     "success" => true,
-                    "message" => "Usuário excluído com sucesso."
+                    "message" => "Usuário excluído permanentemente."
                 ]);
             } else {
-                error_log("❌ Falha ao excluir usuário ID {$user_id}");
                 http_response_code(500);
                 echo json_encode([
                     "success" => false, 
