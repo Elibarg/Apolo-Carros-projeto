@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="../../css/admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script src="../../js/auth-integration.js"></script>
+    <script src="../../js/auth-integration.js"></script>
     <script src="../../js/componentsAdm.js"></script>
 </head>
 <body>
@@ -17,14 +17,14 @@
     
     <!-- ✅ HEADER SERÁ CARREGADO AQUI -->
     <header></header>
+    
     <div class="admin-container">
         <main class="admin-main">
-
             <div class="admin-content">
                 <div class="toolbar">
                     <div class="search-bar">
                         <input type="text" placeholder="Buscar usuário..." id="searchInput">
-                        <button class="btn btn-primary" onclick="buscarUsuarios()">
+                        <button class="btn btn-primary" id="searchButton">
                             <i class="fas fa-search"></i>
                         </button>
                     </div>
@@ -52,130 +52,15 @@
                         </table>
                     </div>
 
-                    <div class="pagination">
-                        <button class="btn btn-outline" disabled>
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <button class="btn btn-outline active">1</button>
-                        <button class="btn btn-outline">2</button>
-                        <button class="btn btn-outline">3</button>
-                        <button class="btn btn-outline">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
+                    <div class="pagination" id="paginationContainer">
+                        <!-- Paginação será gerada dinamicamente -->
                     </div>
                 </div>
             </div>
         </main>
     </div>
+    
 
-    <script>
-        // ✅ VERIFICAÇÃO DE ADMIN
-        document.addEventListener('DOMContentLoaded', function() {
-            const userData = AuthService.getUserData();
-            
-            if (userData && userData.tipo_usuario === 'admin') {
-                document.getElementById('adminName').innerHTML = 
-                    `${userData.nome_completo} <i class="fas fa-chevron-down"></i>`;
-            } else {
-                alert('Acesso restrito a administradores.');
-                window.location.href = '../../html/login.html';
-                return;
-            }
-
-            // ✅ EVENT LISTENER PARA LOGOUT
-            document.getElementById('logoutBtn').addEventListener('click', function(e) {
-                e.preventDefault();
-                AuthService.logout();
-            });
-
-            // Carregar usuários
-            carregarUsuarios();
-        });
-
-        async function carregarUsuarios() {
-            try {
-                const token = localStorage.getItem('user_token');
-                const response = await fetch('../../backend/api/users.php', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    preencherTabela(result.data.users);
-                } else {
-                    console.error('Erro:', result.message);
-                }
-            } catch (error) {
-                console.error('Erro ao carregar usuários:', error);
-            }
-        }
-
-        function preencherTabela(users) {
-            const tbody = document.getElementById('usersTableBody');
-            tbody.innerHTML = '';
-
-            users.forEach(user => {
-                const row = `
-                    <tr>
-                        <td>${user.nome_completo}</td>
-                        <td>${user.email}</td>
-                        <td>
-                            <span class="badge ${user.tipo === 'admin' ? 'admin' : 'user'}">
-                                ${user.tipo === 'admin' ? 'Administrador' : 'Usuário'}
-                            </span>
-                        </td>
-                        <td>${user.telefone || 'N/A'}</td>
-                        <td>${new Date(user.created_at).toLocaleDateString('pt-BR')}</td>
-                        <td class="actions">
-                            <button class="btn btn-sm btn-outline" onclick="editarUsuario(${user.id})">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-sm btn-danger" onclick="excluirUsuario(${user.id})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
-            });
-        }
-
-        function editarUsuario(id) {
-            window.location.href = `editar_cliente.html?id=${id}`;
-        }
-
-        async function excluirUsuario(id) {
-            if (confirm('Tem certeza que deseja excluir este usuário?')) {
-                try {
-                    const token = localStorage.getItem('user_token');
-                    const response = await fetch(`../../backend/api/users.php?id=${id}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        alert('Usuário excluído com sucesso!');
-                        carregarUsuarios();
-                    } else {
-                        alert('Erro: ' + result.message);
-                    }
-                } catch (error) {
-                    alert('Erro ao excluir usuário');
-                }
-            }
-        }
-
-        function buscarUsuarios() {
-            // Implementar busca
-            console.log('Buscar usuários...');
-        }
-    </script>
+    <script src="../../js/clientes.js"></script>
 </body>
 </html>

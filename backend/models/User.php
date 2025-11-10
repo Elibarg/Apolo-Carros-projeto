@@ -299,19 +299,23 @@ class User {
         return $row['total_rows'];
     }
 
-    // Desativar usuário (exclusão lógica)
+    // ✅ MÉTODO DEACTIVATE CORRIGIDO
     public function deactivate() {
         $query = "UPDATE " . $this->table_name . " 
                   SET ativo = 0,
                       data_atualizacao = CURRENT_TIMESTAMP
-                  WHERE id = :id";
+                  WHERE id = :id
+                  AND ativo = 1"; // ✅ Só desativa se estiver ativo
 
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":id", $this->id);
 
         if($stmt->execute()) {
-            return true;
+            error_log("✅ Usuário ID {$this->id} desativado com sucesso");
+            return $stmt->rowCount() > 0; // ✅ Retorna true se alguma linha foi afetada
         }
+        
+        error_log("❌ Erro ao desativar usuário ID {$this->id}: " . implode(", ", $stmt->errorInfo()));
         return false;
     }
 
