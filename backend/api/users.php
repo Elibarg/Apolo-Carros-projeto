@@ -1,3 +1,4 @@
+
 <?php
 // Arquivo: backend/api/users.php
 header("Access-Control-Allow-Origin: *");
@@ -52,7 +53,6 @@ try {
                             "genero" => $user->genero,
                             "cep" => $user->cep,
                             "endereco" => $user->endereco,
-                            "bairro" => $user->bairro,
                             "cidade" => $user->cidade,
                             "estado" => $user->estado,
                             "data_cadastro" => $user->data_cadastro

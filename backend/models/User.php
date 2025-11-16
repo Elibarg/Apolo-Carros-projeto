@@ -267,18 +267,25 @@ class User {
 
     // Listar todos os usuários (para admin)
     public function readAll($from_record_num = 0, $records_per_page = 10) {
-        $query = "SELECT id, nome_completo, email, tipo_usuario, cidade, estado, data_cadastro 
-                  FROM " . $this->table_name . " 
-                  ORDER BY data_cadastro DESC
-                  LIMIT :from_record_num, :records_per_page";
+    $query = "SELECT 
+                id, 
+                nome_completo, 
+                email, 
+                tipo_usuario, 
+                telefone,
+                data_cadastro
+              FROM " . $this->table_name . "
+              ORDER BY data_cadastro DESC
+              LIMIT :from_record_num, :records_per_page";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":from_record_num", $from_record_num, PDO::PARAM_INT);
-        $stmt->bindParam(":records_per_page", $records_per_page, PDO::PARAM_INT);
-        $stmt->execute();
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(":from_record_num", $from_record_num, PDO::PARAM_INT);
+    $stmt->bindParam(":records_per_page", $records_per_page, PDO::PARAM_INT);
+    $stmt->execute();
 
-        return $stmt;
-    }
+    return $stmt;
+}
+
 
     // Contar total de usuários
     public function countAll() {

@@ -808,3 +808,37 @@
         width: 100%;
     }
 }
+.btn-action {
+    all: unset;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 6px !important;
+    cursor: pointer;
+    font-size: 15px !important;
+    margin: 0 4px !important;
+}
+
+.btn-action.edit {
+    background-color: #2196f3;
+    color: #fff;
+}
+
+.btn-action.edit:hover {
+    background-color: #0b7dda;
+}
+
+.btn-action.delete {
+    background-color: #f44336;
+    color: #fff;
+}
+
+.btn-action.delete:hover {
+    background-color: #d32f2f;
+}
+
+.btn-action i {
+    pointer-events: none;
+}
