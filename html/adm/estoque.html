@@ -34,54 +34,21 @@
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th>Modelo</th>
+                                    <th>Veículo</th>
                                     <th>Ano</th>
-                                    <th>KM</th>
+                                    <th>Quilometragem</th>
                                     <th>Status</th>
                                     <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>Sedan X</td>
-                                    <td>2021</td>
-                                    <td>95.000</td>
-                                    <td><span class="badge success">Disponível</span></td>
-                                    <td class="actions">
-                                        <a href="editar_estoque.html" class="btn btn-sm btn-outline"><i class="fas fa-edit"></i></a>
-                                        <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Sedan X</td>
-                                    <td>2021</td>
-                                    <td>95.000</td>
-                                    <td><span class="badge success">Disponível</span></td>
-                                    <td class="actions">
-                                        <a href="editar_estoque.html" class="btn btn-sm btn-outline"><i class="fas fa-edit"></i></a>
-                                        <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Sedan X</td>
-                                    <td>2021</td>
-                                    <td>95.000</td>
-                                    <td><span class="badge warning">Reservado</span></td>
-                                    <td class="actions">
-                                        <a href="editar_estoque.html" class="btn btn-sm btn-outline"><i class="fas fa-edit"></i></a>
-                                        <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
-                                    </td>
-                                </tr>
+                                <!-- Os dados serão carregados via JavaScript -->
                             </tbody>
                         </table>
                     </div>
 
                     <div class="pagination">
-                        <button class="btn btn-outline" disabled><i class="fas fa-chevron-left"></i></button>
-                        <button class="btn btn-outline active">1</button>
-                        <button class="btn btn-outline">2</button>
-                        <button class="btn btn-outline">3</button>
-                        <button class="btn btn-outline"><i class="fas fa-chevron-right"></i></button>
+                        <!-- A paginação será gerada via JavaScript -->
                     </div>
                 </div>
             </div>
@@ -93,8 +60,10 @@
             const userData = AuthService.getUserData();
             
             if (userData && userData.tipo_usuario === 'admin') {
-                document.getElementById('adminName').innerHTML = 
-                    `${userData.nome_completo} <i class="fas fa-chevron-down"></i>`;
+                // Aguardar um pouco para garantir que os componentes carregaram
+                setTimeout(() => {
+                    loadVehicles(1);
+                }, 100);
             } else {
                 alert('Acesso restrito a administradores.');
                 window.location.href = '../../html/login.html';

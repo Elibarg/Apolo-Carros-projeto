@@ -1,62 +1,99 @@
-const VEH_API = "../../backend/api/vehicles.php";
+// js/adicionar_carros.js
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('addVehicleForm');
+  const uploadCard = document.querySelector('.upload-new');
+  const fileInput = document.getElementById('imageInput');
+  const imageGrid = document.getElementById('imageGrid');
 
-document.addEventListener("DOMContentLoaded", () => {
-    const form = document.querySelector(".vehicle-form");
-    const imageInput = document.getElementById("vehicleImages");
-    const preview = document.getElementById("imagePreview");
+  // Usamos DataTransfer para manter uma lista editável de arquivos
+  const dataTransfer = new DataTransfer();
 
-    imageInput && imageInput.addEventListener("change", () => {
-        preview.innerHTML = "";
-        Array.from(imageInput.files).forEach(file => {
-            const reader = new FileReader();
-            const wrap = document.createElement('div');
-            wrap.className = 'image-preview';
-            reader.onload = e => {
-                wrap.innerHTML = `<img src="${e.target.result}" alt=""><button type="button" class="btn btn-danger btn-sm remove-image"><i class="fas fa-times"></i></button>`;
-                preview.appendChild(wrap);
-                wrap.querySelector('.remove-image').addEventListener('click', () => {
-                    wrap.remove();
-                    // rebuild FileList: easiest is to clear input and rely on user re-select — keep simple
-                    imageInput.value = "";
-                });
-            };
-            reader.readAsDataURL(file);
+  // quando clicar no cartão, abrir o input escondido
+  if (uploadCard) {
+    uploadCard.addEventListener('click', (e) => {
+      // evitar clique no botão interno
+      if (e.target.tagName.toLowerCase() === 'input') return;
+      fileInput.click();
+    });
+  }
+
+  // tratar seleção de arquivos
+  fileInput.addEventListener('change', (e) => {
+    const files = Array.from(e.target.files);
+    files.forEach(file => {
+      // adicionar ao DataTransfer
+      dataTransfer.items.add(file);
+      // criar preview
+      const reader = new FileReader();
+      const wrap = document.createElement('div');
+      wrap.className = 'image-preview';
+      reader.onload = (ev) => {
+        wrap.innerHTML = `
+          <img src="${ev.target.result}" alt="${file.name}">
+          <button type="button" class="btn btn-danger btn-sm remove-image"><i class="fas fa-times"></i></button>
+        `;
+        // inserir antes do uploadCard
+        imageGrid.insertBefore(wrap, uploadCard);
+        // remover handler
+        wrap.querySelector('.remove-image').addEventListener('click', () => {
+          // remover do DataTransfer
+          removeFileFromDataTransfer(file.name);
+          wrap.remove();
         });
+      };
+      reader.readAsDataURL(file);
     });
 
-    form.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const formData = new FormData();
-        formData.append('marca', document.getElementById('marca').value);
-        formData.append('modelo', document.getElementById('modelo').value);
-        formData.append('ano', document.getElementById('ano').value);
-        formData.append('km', document.getElementById('km').value);
-        formData.append('preco', document.getElementById('preco').value);
-        formData.append('status', 'available');
-        formData.append('descricao', '');
+    // atualizar o fileInput.files com dataTransfer (para compat com envio)
+    fileInput.files = dataTransfer.files;
+  });
 
-        const files = document.getElementById('vehicleImages').files;
-        for (let i = 0; i < files.length; i++) {
-            formData.append('images[]', files[i]);
-        }
-
-        fetch(VEH_API, {
-            method: 'POST',
-            body: formData,
-            credentials: 'include'
-        })
-        .then(r => r.json())
-        .then(res => {
-            if (!res.success) {
-                alert("Erro: " + (res.message || "Não foi possível cadastrar"));
-                return;
-            }
-            alert("Veículo cadastrado com sucesso!");
-            window.location.href = "estoque.html";
-        })
-        .catch(err => {
-            console.error(err);
-            alert("Erro na requisição.");
-        });
+  function removeFileFromDataTransfer(name) {
+    // criar novo DataTransfer e copiar exceto o nome
+    const dt = new DataTransfer();
+    Array.from(dataTransfer.files).forEach(f => {
+      if (f.name !== name) dt.items.add(f);
     });
+    // substituir
+    while (dataTransfer.items.length) dataTransfer.items.remove(0);
+    Array.from(dt.files).forEach(f => dataTransfer.items.add(f));
+    fileInput.files = dataTransfer.files;
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const api = "../../backend/api/vehicles.php";
+    const fd = new FormData();
+
+    fd.append('marca', document.getElementById('model').value || '');
+    fd.append('modelo', document.getElementById('model').value || '');
+    fd.append('ano', document.getElementById('year').value || '');
+    fd.append('km', document.getElementById('km').value || 0);
+    fd.append('preco', document.getElementById('price').value || 0);
+    fd.append('status', document.getElementById('status').value || 'available');
+
+    // adicionar arquivos do dataTransfer
+    Array.from(dataTransfer.files).forEach((file, idx) => {
+      fd.append('images[]', file, file.name);
+    });
+
+    fetch(api, {
+      method: 'POST',
+      credentials: 'include',
+      body: fd
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (!res.success) {
+        alert('Erro: ' + (res.message || 'Não foi possível cadastrar'));
+        return;
+      }
+      alert('Veículo cadastrado com sucesso!');
+      window.location.href = 'estoque.html';
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Erro na requisição.');
+    });
+  });
 });

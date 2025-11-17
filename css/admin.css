@@ -242,21 +242,37 @@
 /* Badges */
 .badge {
     display: inline-block;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 500;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .badge.success {
-    background-color: rgba(39, 174, 96, 0.1);
+    background: rgba(39, 174, 96, 0.15);
     color: #27ae60;
+    border: 1px solid rgba(39, 174, 96, 0.3);
 }
 
 .badge.warning {
-    background-color: rgba(241, 196, 15, 0.1);
-    color: #f1c40f;
+    background: rgba(241, 196, 15, 0.15);
+    color: #f39c12;
+    border: 1px solid rgba(241, 196, 15, 0.3);
 }
+.badge.vendido   {
+    background: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+.badge.secondary {
+    background: rgba(108, 117, 125, 0.15);
+    color: #6c757d;
+    border: 1px solid rgba(108, 117, 125, 0.3);
+}
+
 
 .actions {
     white-space: nowrap;
@@ -841,4 +857,63 @@
 
 .btn-action i {
     pointer-events: none;
+}
+
+/* ==========================
+   PAGINAÇÃO
+   ========================== */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+    padding: 1rem;
+    flex-wrap: wrap;
+}
+
+.pagination button {
+    padding: 0.75rem 1rem;
+    border: 1px solid #ddd;
+    background: white;
+    color: #333;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.pagination button:hover:not(:disabled) {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+    transform: translateY(-1px);
+}
+
+.pagination button.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.pagination button:disabled:hover {
+    background: white;
+    color: #333;
+    border-color: #ddd;
+}
+
+/* Ícones nos botões de navegação */
+.pagination button i {
+    font-size: 0.8rem;
 }

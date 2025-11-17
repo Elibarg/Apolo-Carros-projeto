@@ -28,8 +28,7 @@ function renderVehicles(list){
             <td>${v.marca} ${v.modelo}</td>
             <td>${v.ano}</td>
             <td>${v.km?.toLocaleString?.() ?? v.km}</td>
-            <td><span class="badge ${v.status === 'available' ? 'success' : v.status === 'reserved' ? 'warning' : ''}">${v.status === 'available' ? 'Disponível' : v.status === 'reserved' ? 'Reservado' : 'Vendido'}</span></td>
-            <td class="actions">
+                <td><span class="badge ${v.status === 'available' ? 'success' : v.status === 'reserved' ? 'warning' : 'vendido'}">${v.status === 'available' ? 'Disponível' : v.status === 'reserved' ? 'Reservado' : 'vendido'}</span></td>
                 <a href="editar_estoque.html?id=${v.id}" class="btn btn-sm btn-outline"><i class="fas fa-edit"></i></a>
                 <button class="btn btn-sm btn-danger" onclick="deleteVehicle(${v.id})"><i class="fas fa-trash"></i></button>
             </td>
