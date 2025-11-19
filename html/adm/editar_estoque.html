@@ -24,20 +24,32 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Modelo</label>
-                            <input type="text" id="model" required>
+                            <label>Marca</label>
+                            <input type="text" id="marca" required>
                         </div>
 
                         <div class="form-group">
-                            <label>Ano</label>
-                            <input type="number" id="year" required>
+                            <label>Modelo</label>
+                            <input type="text" id="modelo" required>
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
+                            <label>Ano</label>
+                            <input type="number" id="ano" required>
+                        </div>
+
+                        <div class="form-group">
                             <label>Quilometragem</label>
                             <input type="number" id="km" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Preço</label>
+                            <input type="number" id="preco" step="0.01" required>
                         </div>
 
                         <div class="form-group">
@@ -51,15 +63,23 @@
                     </div>
 
                     <div class="form-row">
-                        <div class="form-group">
-                            <label>Preço</label>
-                            <input type="number" id="price" step="0.01">
-                        </div>
-
                         <div class="form-group" id="purchaseDateGroup" style="display: none;">
                             <label>Data da Compra</label>
-                            <input type="date" id="purchaseDate">
+                            <input type="date" id="data_compra">
                         </div>
+
+                        <div class="form-group">
+                            <label>Destaque</label>
+                            <select id="destaque">
+                                <option value="nao">Não</option>
+                                <option value="sim">Sim</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Descrição</label>
+                        <textarea id="descricao" rows="4"></textarea>
                     </div>
 
                     <div class="form-group">

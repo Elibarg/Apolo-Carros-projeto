@@ -1,166 +1,170 @@
-// js/editar_estoque.js
-document.addEventListener('DOMContentLoaded', () => {
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get('id');
-  if (!id) { alert('ID ausente'); window.location.href = 'estoque.html'; return; }
+const API_URL = "../../backend/api/vehicles.php";
 
-  const form = document.getElementById('editVehicleForm');
-  const uploadCard = document.querySelector('.upload-new');
-  const fileInput = document.getElementById('imageInput');
-  const imageGrid = document.getElementById('imageGrid');
-  const statusSelect = document.getElementById('status');
-  const purchaseDateGroup = document.getElementById('purchaseDateGroup');
-  const purchaseDateInput = document.getElementById('purchaseDate');
+// ===============================
+// PEGAR ID DA URL
+// ===============================
+const urlParams = new URLSearchParams(window.location.search);
+const vehicleId = urlParams.get("id");
 
-  const dataTransfer = new DataTransfer();
-  const removedImages = [];
+if (!vehicleId) {
+    alert("ID inválido.");
+    window.history.back();
+}
 
-  // Mostrar/ocultar campo de data da compra baseado no status
-  function togglePurchaseDateField() {
-    if (statusSelect.value === 'sold') {
-      purchaseDateGroup.style.display = 'block';
-      if (!purchaseDateInput.value) {
-        purchaseDateInput.value = new Date().toISOString().split('T')[0];
-      }
-    } else {
-      purchaseDateGroup.style.display = 'none';
-      purchaseDateInput.value = '';
-    }
-  }
+// ===============================
+// CARREGAR DADOS DO VEÍCULO
+// ===============================
+fetch(`${API_URL}?id=${vehicleId}`)
+    .then(res => res.json())
+    .then(data => {
+        if (!data.success) {
+            alert("Erro ao carregar veículo.");
+            return;
+        }
 
-  statusSelect.addEventListener('change', togglePurchaseDateField);
+        const v = data.data;
 
-  // Abrir seletor de arquivos ao clicar
-  uploadCard?.addEventListener('click', (e) => {
-    if (e.target.tagName.toLowerCase() !== 'input') {
-      fileInput.click();
-    }
-  });
+        document.getElementById("vehicleId").value = v.id;
+        document.getElementById("marca").value = v.marca;
+        document.getElementById("modelo").value = v.modelo;
+        document.getElementById("ano").value = v.ano;
+        document.getElementById("km").value = v.km;
+        document.getElementById("preco").value = v.preco;
+        document.getElementById("status").value = v.status;
+        document.getElementById("destaque").value = v.destaque || "nao";
+        document.getElementById("descricao").value = v.descricao || "";
 
-  // Carregar dados do veículo
-  fetch(`../../backend/api/vehicles.php?id=${encodeURIComponent(id)}`, { credentials: 'include' })
-    .then(r => r.json())
-    .then(res => {
-      if (!res.success) { alert('Veículo não encontrado'); return; }
-      const v = res.data;
+        // Preencher data de compra se existir
+        if (v.data_compra) {
+            document.getElementById("data_compra").value = v.data_compra;
+        }
 
-      document.getElementById('vehicleId').value = v.id;
-      document.getElementById('model').value = v.modelo || '';
-      document.getElementById('year').value = v.ano || '';
-      document.getElementById('km').value = v.km || '';
-      document.getElementById('status').value = v.status || 'available';
-      document.getElementById('price').value = v.preco || '';
+        // Mostrar/ocultar data de compra baseado no status
+        togglePurchaseDate(v.status);
 
-      if (v.data_compra) {
-        purchaseDateInput.value = v.data_compra;
-      }
-
-      togglePurchaseDateField();
-
-      // Inserir imagens existentes
-      (v.images || []).forEach(url => {
-        const wrap = document.createElement('div');
-        wrap.className = 'image-preview';
-        wrap.innerHTML = `
-          <img src="${url}" alt="img">
-          <button type="button" class="btn btn-danger btn-sm remove-image-existing">
-            <i class="fas fa-times"></i>
-          </button>
-        `;
-        imageGrid.insertBefore(wrap, uploadCard);
-        wrap.querySelector('.remove-image-existing').addEventListener('click', () => {
-          removedImages.push(url);
-          wrap.remove();
-        });
-      });
+        // Carregar imagens existentes
+        loadExistingImages(v.images || []);
     })
-    .catch(err => {
-      console.error('Erro ao carregar veículo:', err);
-      alert('Erro ao carregar dados do veículo');
-    });
+    .catch(err => console.error("Erro ao carregar veículo:", err));
 
-  // Quando selecionar novas imagens
-  fileInput.addEventListener('change', (e) => {
-    const files = Array.from(e.target.files);
-    files.forEach(file => {
-      dataTransfer.items.add(file);
-      const reader = new FileReader();
-      const wrap = document.createElement('div');
-      wrap.className = 'image-preview';
+// ===============================
+// TOGGLE DATA DE COMPRA
+// ===============================
+function togglePurchaseDate(status) {
+    const purchaseDateGroup = document.getElementById("purchaseDateGroup");
+    if (status === 'sold') {
+        purchaseDateGroup.style.display = 'block';
+    } else {
+        purchaseDateGroup.style.display = 'none';
+    }
+}
 
-      reader.onload = (ev) => {
-        wrap.innerHTML = `
-          <img src="${ev.target.result}" alt="${file.name}">
-          <button type="button" class="btn btn-danger btn-sm remove-image-new">
-            <i class="fas fa-times"></i>
-          </button>
+// Event listener para mudança de status
+document.getElementById("status").addEventListener("change", function() {
+    togglePurchaseDate(this.value);
+});
+
+// ===============================
+// GERENCIAMENTO DE IMAGENS
+// ===============================
+let existingImages = [];
+let removedImages = [];
+
+function loadExistingImages(images) {
+    existingImages = images;
+    const imageGrid = document.getElementById("imageGrid");
+    
+    // Limpar grid (exceto o botão de upload)
+    const uploadBtn = imageGrid.querySelector('.upload-new');
+    imageGrid.innerHTML = '';
+    imageGrid.appendChild(uploadBtn);
+
+    // Adicionar imagens existentes
+    images.forEach((imgUrl, index) => {
+        const imgContainer = document.createElement('div');
+        imgContainer.className = 'image-preview';
+        imgContainer.innerHTML = `
+            <img src="${imgUrl}" alt="Veículo ${index + 1}">
+            <button type="button" class="remove-image" data-index="${index}">
+                <i class="fas fa-times"></i>
+            </button>
         `;
-        imageGrid.insertBefore(wrap, uploadCard);
-        wrap.querySelector('.remove-image-new').addEventListener('click', () => {
-          removeFileFromDataTransfer(file.name);
-          wrap.remove();
+        imageGrid.insertBefore(imgContainer, uploadBtn);
+    });
+
+    // Adicionar event listeners para botões de remover
+    document.querySelectorAll('.remove-image').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const index = parseInt(this.getAttribute('data-index'));
+            removedImages.push(existingImages[index]);
+            existingImages.splice(index, 1);
+            loadExistingImages(existingImages);
         });
-      };
-      reader.readAsDataURL(file);
     });
+}
 
-    fileInput.files = dataTransfer.files;
-  });
+// Upload de novas imagens
+document.getElementById('imageInput').addEventListener('change', function(e) {
+    const files = e.target.files;
+    if (files.length > 0) {
+        // Aqui você pode implementar o preview das novas imagens
+        // Por enquanto, apenas limpa o input
+        this.value = '';
+    }
+});
 
-  function removeFileFromDataTransfer(name) {
-    const dt = new DataTransfer();
-    Array.from(dataTransfer.files).forEach(f => {
-      if (f.name !== name) dt.items.add(f);
-    });
-    dataTransfer.items.clear();
-    dt.files.forEach(f => dataTransfer.items.add(f));
-    fileInput.files = dataTransfer.files;
-  }
-
-  // SUBMIT FINAL — ENVIA data_compra corretamente!
-  form.addEventListener('submit', (e) => {
+// ===============================
+// SALVAR ALTERAÇÕES
+// ===============================
+document.getElementById("editVehicleForm").addEventListener("submit", async (e) => {
     e.preventDefault();
-    const api = "../../backend/api/vehicles.php";
-    const fd = new FormData();
 
-    fd.append('_method', 'PUT');
-    fd.append('id', id);
-    fd.append('modelo', document.getElementById('model').value || '');
-    fd.append('ano', document.getElementById('year').value || '');
-    fd.append('km', document.getElementById('km').value || 0);
-    fd.append('preco', document.getElementById('price').value || 0);
-    fd.append('status', statusSelect.value || 'available');
+    const formData = new FormData();
+    formData.append("_method", "PUT");
+    formData.append("id", vehicleId);
+    formData.append("marca", document.getElementById("marca").value);
+    formData.append("modelo", document.getElementById("modelo").value);
+    formData.append("ano", document.getElementById("ano").value);
+    formData.append("km", document.getElementById("km").value);
+    formData.append("preco", document.getElementById("preco").value);
+    formData.append("status", document.getElementById("status").value);
+    formData.append("destaque", document.getElementById("destaque").value);
+    formData.append("descricao", document.getElementById("descricao").value);
 
-    // 🔥 ENVIA A DATA CORRETAMENTE
-    if (statusSelect.value === 'sold') {
-      fd.append('data_compra', purchaseDateInput.value || '');
-    } else {
-      fd.append('data_compra', '');
+    // Adicionar data de compra apenas se status for 'sold'
+    if (document.getElementById("status").value === 'sold') {
+        formData.append("data_compra", document.getElementById("data_compra").value);
     }
 
-    Array.from(dataTransfer.files).forEach(file => {
-      fd.append('images[]', file, file.name);
+    // Adicionar imagens removidas
+    removedImages.forEach(img => {
+        formData.append("removed_images[]", img);
     });
 
-    removedImages.forEach(url => fd.append('removed_images[]', url));
+    // Adicionar novas imagens
+    const imageInput = document.getElementById('imageInput');
+    if (imageInput.files.length > 0) {
+        for (let i = 0; i < imageInput.files.length; i++) {
+            formData.append("images[]", imageInput.files[i]);
+        }
+    }
 
-    fetch(api, {
-      method: 'POST',
-      credentials: 'include',
-      body: fd
-    })
-    .then(r => r.json())
-    .then(res => {
-      if (!res.success) {
-        alert(`Erro ao atualizar: ${res.message || 'Falha desconhecida'}`);
-        return;
-      }
-      alert('Veículo atualizado com sucesso!');
-      window.location.href = 'estoque.html';
-    })
-    .catch(err => {
-      console.error(err);
-      alert('Erro ao enviar dados para o servidor.');
-    });
-  });
+    try {
+        const res = await fetch(API_URL, {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            alert("Veículo atualizado com sucesso!");
+            window.location.href = "estoque.html";
+        } else {
+            alert("Erro: " + data.message);
+        }
+    } catch (err) {
+        console.error("Erro ao atualizar veículo:", err);
+        alert("Erro ao atualizar veículo.");
+    }
 });

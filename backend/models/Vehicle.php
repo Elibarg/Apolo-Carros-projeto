@@ -14,6 +14,7 @@ class Vehicle {
     public $data_compra;
     public $images;
     public $descricao;
+    public $destaque;
     public $data_cadastro;
     public $ativo;
 
@@ -24,8 +25,8 @@ class Vehicle {
     // Criar veículo
     public function create() {
         $query = "INSERT INTO " . $this->table_name . " 
-            (marca, modelo, ano, km, preco, status, data_compra, images, descricao) 
-            VALUES (:marca, :modelo, :ano, :km, :preco, :status, :data_compra, :images, :descricao)";
+            (marca, modelo, ano, km, preco, status, data_compra, images, descricao, destaque) 
+            VALUES (:marca, :modelo, :ano, :km, :preco, :status, :data_compra, :images, :descricao, :destaque)";
         $stmt = $this->conn->prepare($query);
 
         $this->marca = htmlspecialchars(strip_tags($this->marca));
@@ -34,23 +35,15 @@ class Vehicle {
         $images_json = is_array($this->images) ? json_encode(array_values($this->images)) : ($this->images ?? null);
 
         // Lógica de data_compra com base no status
-       // LÓGICA CORRIGIDA PARA ATUALIZAÇÃO DE data_compra
-if ($this->status === 'sold') {
-    // Se veio uma nova data do frontend, usa ela
-    if (!empty($this->data_compra)) {
-        $fields[] = "data_compra = :data_compra";
-        $params[':data_compra'] = $this->data_compra;
-    } else {
-        // Se não veio data, registra a data atual
-        $this->data_compra = date('Y-m-d');
-        $fields[] = "data_compra = :data_compra";
-        $params[':data_compra'] = $this->data_compra;
-    }
-} else {
-    // Se não está vendido, limpa a data de compra
-    $fields[] = "data_compra = NULL";
-}
-
+        if ($this->status === 'sold') {
+            if (!empty($this->data_compra)) {
+                // Usa a data fornecida
+            } else {
+                $this->data_compra = date('Y-m-d');
+            }
+        } else {
+            $this->data_compra = null;
+        }
 
         $stmt->bindParam(":marca", $this->marca);
         $stmt->bindParam(":modelo", $this->modelo);
@@ -61,6 +54,7 @@ if ($this->status === 'sold') {
         $stmt->bindParam(":data_compra", $this->data_compra);
         $stmt->bindParam(":images", $images_json);
         $stmt->bindParam(":descricao", $this->descricao);
+        $stmt->bindParam(":destaque", $this->destaque);
 
         if ($stmt->execute()) {
             $this->id = $this->conn->lastInsertId();
@@ -86,26 +80,57 @@ if ($this->status === 'sold') {
         return false;
     }
 
-    // Listar com paginação
-    public function readAll($from_record_num = 0, $records_per_page = 10) {
-        $query = "SELECT id, marca, modelo, ano, km, preco, status, data_compra, images, data_cadastro FROM " . $this->table_name . " WHERE ativo = 1 ORDER BY data_cadastro DESC LIMIT :from_record_num, :records_per_page";
+    // Listar com paginação e filtro por destaque
+    public function readAll($from_record_num = 0, $records_per_page = 10, $destaque = null) {
+        $whereConditions = ["ativo = 1"];
+        $params = [];
+
+        if ($destaque !== null) {
+            $whereConditions[] = "destaque = :destaque";
+        }
+
+        $whereClause = implode(" AND ", $whereConditions);
+        $query = "SELECT id, marca, modelo, ano, km, preco, status, data_compra, images, destaque, data_cadastro 
+                  FROM " . $this->table_name . " 
+                  WHERE $whereClause 
+                  ORDER BY data_cadastro DESC 
+                  LIMIT :from_record_num, :records_per_page";
+        
         $stmt = $this->conn->prepare($query);
+        
+        if ($destaque !== null) {
+            $stmt->bindParam(":destaque", $destaque);
+        }
         $stmt->bindParam(":from_record_num", $from_record_num, PDO::PARAM_INT);
         $stmt->bindParam(":records_per_page", $records_per_page, PDO::PARAM_INT);
+        
         $stmt->execute();
         return $stmt;
     }
 
-    // Contar total
-    public function countAll() {
-        $query = "SELECT COUNT(*) as total_rows FROM " . $this->table_name . " WHERE ativo = 1";
+    // Contar total com filtro por destaque
+    public function countAll($destaque = null) {
+        $whereConditions = ["ativo = 1"];
+        $params = [];
+
+        if ($destaque !== null) {
+            $whereConditions[] = "destaque = :destaque";
+        }
+
+        $whereClause = implode(" AND ", $whereConditions);
+        $query = "SELECT COUNT(*) as total_rows FROM " . $this->table_name . " WHERE $whereClause";
         $stmt = $this->conn->prepare($query);
+        
+        if ($destaque !== null) {
+            $stmt->bindParam(":destaque", $destaque);
+        }
+        
         $stmt->execute();
         $r = $stmt->fetch(PDO::FETCH_ASSOC);
         return $r ? (int)$r['total_rows'] : 0;
     }
 
-    // Atualizar (atualiza campos permitidos)
+    // Atualizar
     public function update() {
         $fields = [];
         $params = [];
@@ -135,20 +160,17 @@ if ($this->status === 'sold') {
             $params[':status'] = $this->status; 
         }
         
-        // LÓGICA CORRIGIDA PARA ATUALIZAÇÃO DE data_compra
+        // Lógica para data_compra
         if ($this->status === 'sold') {
-            // Se veio uma nova data do frontend, usa ela
             if (!empty($this->data_compra)) {
                 $fields[] = "data_compra = :data_compra";
                 $params[':data_compra'] = $this->data_compra;
             } else {
-                // Se não veio data, registra a data atual
                 $this->data_compra = date('Y-m-d');
                 $fields[] = "data_compra = :data_compra";
                 $params[':data_compra'] = $this->data_compra;
             }
         } else {
-            // Se não está vendido, limpa a data de compra
             $fields[] = "data_compra = NULL";
         }
         
@@ -159,6 +181,10 @@ if ($this->status === 'sold') {
         if ($this->images !== null) { 
             $fields[] = "images = :images"; 
             $params[':images'] = is_array($this->images) ? json_encode(array_values($this->images)) : $this->images; 
+        }
+        if ($this->destaque !== null) { 
+            $fields[] = "destaque = :destaque"; 
+            $params[':destaque'] = $this->destaque; 
         }
 
         if (empty($fields)) return true;

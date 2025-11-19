@@ -49,16 +49,17 @@ try {
 
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+            $destaque = isset($_GET['destaque']) ? $_GET['destaque'] : null;
             $offset = ($page - 1) * $limit;
 
-            $stmt = $vehicle->readAll($offset, $limit);
+            $stmt = $vehicle->readAll($offset, $limit, $destaque);
             $vehicles = $stmt->fetchAll(PDO::FETCH_ASSOC);
             // decode images
             foreach ($vehicles as &$v) {
                 $v['images'] = $v['images'] ? json_decode($v['images'], true) : [];
             }
 
-            $total = $vehicle->countAll();
+            $total = $vehicle->countAll($destaque);
             echo json_encode([
                 "success" => true,
                 "data" => [
@@ -83,6 +84,7 @@ try {
             $vehicle->status = $_POST['status'] ?? 'available';
             $vehicle->data_compra = $_POST['data_compra'] ?? null;
             $vehicle->descricao = $_POST['descricao'] ?? null;
+            $vehicle->destaque = $_POST['destaque'] ?? 'nao';
 
             // handle uploads
             $uploaded_urls = [];
@@ -136,8 +138,7 @@ try {
             if (isset($_POST['status'])) $vehicle->status = $_POST['status'];
             if (isset($_POST['data_compra'])) $vehicle->data_compra = $_POST['data_compra'];
             if (isset($_POST['descricao'])) $vehicle->descricao = $_POST['descricao'];
-
-            // A lógica de data_compra está no modelo Vehicle.php no método update()
+            if (isset($_POST['destaque'])) $vehicle->destaque = $_POST['destaque'];
 
             // imagens: se enviou novas imagens, adiciona às existentes
             $existing_images = $vehicle->images ?: [];

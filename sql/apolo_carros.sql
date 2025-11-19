@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 18/11/2025 às 10:41
+-- Tempo de geração: 19/11/2025 às 17:35
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -86,8 +86,9 @@ CREATE TABLE `veiculos` (
 
 INSERT INTO `veiculos` (`id`, `marca`, `modelo`, `ano`, `km`, `preco`, `status`, `data_compra`, `images`, `descricao`, `data_cadastro`, `data_atualizacao`, `ativo`) VALUES
 (1, 'Chevrolet', 'Onix LT', 2021, 95000, 75000.00, 'available', NULL, '[\"/Apolo-Carros-projeto/img/Chevrolet_Onix.png\"]', 'Sedan econômico, revisado.', '2025-11-17 09:40:30', '2025-11-17 09:40:30', 1),
-(2, 'Chevrolet', 'h423', 2000, 200, 20000000.00, 'sold', NULL, '[\"\\/Apolo-Carros-projeto\\/img\\/vehicles\\/veh_691aeffd050bc5.33996938.jpg\",\"\\/Apolo-Carros-projeto\\/img\\/vehicles\\/veh_691af37e0dc097.17956944.webp\"]', '', '2025-11-17 09:50:53', '2025-11-17 10:05:50', 1),
-(3, 'Sedan X3', 'Sedan X3', 2222, 400, 45000.00, 'reserved', NULL, '[\"\\/Apolo-Carros-projeto\\/img\\/vehicles\\/veh_691af3a942a218.83267900.jpg\",\"\\/Apolo-Carros-projeto\\/img\\/vehicles\\/veh_691af3a94ddb78.87749105.webp\"]', '', '2025-11-17 10:06:33', '2025-11-17 10:06:33', 1);
+(2, 'Chevrolet', 'h423', 2000, 200, 20000000.00, 'sold', '2025-11-01', '[\"\\/Apolo-Carros-projeto\\/img\\/vehicles\\/veh_691aeffd050bc5.33996938.jpg\",\"\\/Apolo-Carros-projeto\\/img\\/vehicles\\/veh_691af37e0dc097.17956944.webp\"]', '', '2025-11-17 09:50:53', '2025-11-18 10:58:34', 1),
+(3, 'Sedan X3', 'Sedan X3', 2222, 400, 45000.00, 'sold', '2025-11-01', '[\"\\/Apolo-Carros-projeto\\/img\\/vehicles\\/veh_691af3a942a218.83267900.jpg\",\"\\/Apolo-Carros-projeto\\/img\\/vehicles\\/veh_691af3a94ddb78.87749105.webp\"]', '', '2025-11-17 10:06:33', '2025-11-19 16:21:43', 1),
+(4, 'h42398', 'h42398', 8888, 786, 67999.00, 'available', NULL, '[]', '', '2025-11-19 09:37:17', '2025-11-19 10:55:18', 1);
 
 --
 -- Índices para tabelas despejadas
@@ -129,7 +130,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de tabela `veiculos`
 --
 ALTER TABLE `veiculos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
