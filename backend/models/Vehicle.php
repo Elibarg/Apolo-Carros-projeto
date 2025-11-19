@@ -11,7 +11,8 @@ class Vehicle {
     public $km;
     public $preco;
     public $status;
-    public $images; // array or JSON
+    public $data_compra;
+    public $images;
     public $descricao;
     public $data_cadastro;
     public $ativo;
@@ -23,8 +24,8 @@ class Vehicle {
     // Criar veículo
     public function create() {
         $query = "INSERT INTO " . $this->table_name . " 
-            (marca, modelo, ano, km, preco, status, images, descricao) 
-            VALUES (:marca, :modelo, :ano, :km, :preco, :status, :images, :descricao)";
+            (marca, modelo, ano, km, preco, status, data_compra, images, descricao) 
+            VALUES (:marca, :modelo, :ano, :km, :preco, :status, :data_compra, :images, :descricao)";
         $stmt = $this->conn->prepare($query);
 
         $this->marca = htmlspecialchars(strip_tags($this->marca));
@@ -32,12 +33,32 @@ class Vehicle {
         $this->descricao = htmlspecialchars(strip_tags($this->descricao));
         $images_json = is_array($this->images) ? json_encode(array_values($this->images)) : ($this->images ?? null);
 
+        // Lógica de data_compra com base no status
+       // LÓGICA CORRIGIDA PARA ATUALIZAÇÃO DE data_compra
+if ($this->status === 'sold') {
+    // Se veio uma nova data do frontend, usa ela
+    if (!empty($this->data_compra)) {
+        $fields[] = "data_compra = :data_compra";
+        $params[':data_compra'] = $this->data_compra;
+    } else {
+        // Se não veio data, registra a data atual
+        $this->data_compra = date('Y-m-d');
+        $fields[] = "data_compra = :data_compra";
+        $params[':data_compra'] = $this->data_compra;
+    }
+} else {
+    // Se não está vendido, limpa a data de compra
+    $fields[] = "data_compra = NULL";
+}
+
+
         $stmt->bindParam(":marca", $this->marca);
         $stmt->bindParam(":modelo", $this->modelo);
         $stmt->bindParam(":ano", $this->ano, PDO::PARAM_INT);
         $stmt->bindParam(":km", $this->km, PDO::PARAM_INT);
         $stmt->bindParam(":preco", $this->preco);
         $stmt->bindParam(":status", $this->status);
+        $stmt->bindParam(":data_compra", $this->data_compra);
         $stmt->bindParam(":images", $images_json);
         $stmt->bindParam(":descricao", $this->descricao);
 
@@ -67,7 +88,7 @@ class Vehicle {
 
     // Listar com paginação
     public function readAll($from_record_num = 0, $records_per_page = 10) {
-        $query = "SELECT id, marca, modelo, ano, km, preco, status, images, data_cadastro FROM " . $this->table_name . " WHERE ativo = 1 ORDER BY data_cadastro DESC LIMIT :from_record_num, :records_per_page";
+        $query = "SELECT id, marca, modelo, ano, km, preco, status, data_compra, images, data_cadastro FROM " . $this->table_name . " WHERE ativo = 1 ORDER BY data_cadastro DESC LIMIT :from_record_num, :records_per_page";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":from_record_num", $from_record_num, PDO::PARAM_INT);
         $stmt->bindParam(":records_per_page", $records_per_page, PDO::PARAM_INT);
@@ -89,14 +110,56 @@ class Vehicle {
         $fields = [];
         $params = [];
 
-        if ($this->marca !== null) { $fields[] = "marca = :marca"; $params[':marca'] = htmlspecialchars(strip_tags($this->marca)); }
-        if ($this->modelo !== null) { $fields[] = "modelo = :modelo"; $params[':modelo'] = htmlspecialchars(strip_tags($this->modelo)); }
-        if ($this->ano !== null) { $fields[] = "ano = :ano"; $params[':ano'] = $this->ano; }
-        if ($this->km !== null) { $fields[] = "km = :km"; $params[':km'] = $this->km; }
-        if ($this->preco !== null) { $fields[] = "preco = :preco"; $params[':preco'] = $this->preco; }
-        if ($this->status !== null) { $fields[] = "status = :status"; $params[':status'] = $this->status; }
-        if ($this->descricao !== null) { $fields[] = "descricao = :descricao"; $params[':descricao'] = htmlspecialchars(strip_tags($this->descricao)); }
-        if ($this->images !== null) { $fields[] = "images = :images"; $params[':images'] = is_array($this->images) ? json_encode(array_values($this->images)) : $this->images; }
+        if ($this->marca !== null) { 
+            $fields[] = "marca = :marca"; 
+            $params[':marca'] = htmlspecialchars(strip_tags($this->marca)); 
+        }
+        if ($this->modelo !== null) { 
+            $fields[] = "modelo = :modelo"; 
+            $params[':modelo'] = htmlspecialchars(strip_tags($this->modelo)); 
+        }
+        if ($this->ano !== null) { 
+            $fields[] = "ano = :ano"; 
+            $params[':ano'] = $this->ano; 
+        }
+        if ($this->km !== null) { 
+            $fields[] = "km = :km"; 
+            $params[':km'] = $this->km; 
+        }
+        if ($this->preco !== null) { 
+            $fields[] = "preco = :preco"; 
+            $params[':preco'] = $this->preco; 
+        }
+        if ($this->status !== null) { 
+            $fields[] = "status = :status"; 
+            $params[':status'] = $this->status; 
+        }
+        
+        // LÓGICA CORRIGIDA PARA ATUALIZAÇÃO DE data_compra
+        if ($this->status === 'sold') {
+            // Se veio uma nova data do frontend, usa ela
+            if (!empty($this->data_compra)) {
+                $fields[] = "data_compra = :data_compra";
+                $params[':data_compra'] = $this->data_compra;
+            } else {
+                // Se não veio data, registra a data atual
+                $this->data_compra = date('Y-m-d');
+                $fields[] = "data_compra = :data_compra";
+                $params[':data_compra'] = $this->data_compra;
+            }
+        } else {
+            // Se não está vendido, limpa a data de compra
+            $fields[] = "data_compra = NULL";
+        }
+        
+        if ($this->descricao !== null) { 
+            $fields[] = "descricao = :descricao"; 
+            $params[':descricao'] = htmlspecialchars(strip_tags($this->descricao)); 
+        }
+        if ($this->images !== null) { 
+            $fields[] = "images = :images"; 
+            $params[':images'] = is_array($this->images) ? json_encode(array_values($this->images)) : $this->images; 
+        }
 
         if (empty($fields)) return true;
 

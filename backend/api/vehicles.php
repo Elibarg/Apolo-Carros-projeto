@@ -8,6 +8,9 @@ header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers
 include_once '../config/database.php';
 include_once '../models/Vehicle.php';
 
+// Definir fuso horário para Brasil
+date_default_timezone_set('America/Sao_Paulo');
+
 if (session_status() === PHP_SESSION_NONE) session_start();
 
 $database = new Database();
@@ -78,6 +81,7 @@ try {
             $vehicle->km = isset($_POST['km']) ? (int)$_POST['km'] : 0;
             $vehicle->preco = $_POST['preco'] ?? 0;
             $vehicle->status = $_POST['status'] ?? 'available';
+            $vehicle->data_compra = $_POST['data_compra'] ?? null;
             $vehicle->descricao = $_POST['descricao'] ?? null;
 
             // handle uploads
@@ -110,11 +114,18 @@ try {
 
         case 'PUT':
             // update via FormData + _method=PUT
-            // id pode vir em $_POST['id']
             $id = $_POST['id'] ?? null;
-            if (!$id) { http_response_code(400); echo json_encode(["success"=>false,"message"=>"ID necessário"]); break; }
+            if (!$id) { 
+                http_response_code(400); 
+                echo json_encode(["success"=>false,"message"=>"ID necessário"]); 
+                break; 
+            }
             $vehicle->id = (int)$id;
-            if (!$vehicle->readOne()) { http_response_code(404); echo json_encode(["success"=>false,"message"=>"Não encontrado"]); break; }
+            if (!$vehicle->readOne()) { 
+                http_response_code(404); 
+                echo json_encode(["success"=>false,"message"=>"Não encontrado"]); 
+                break; 
+            }
 
             // campos enviados
             if (isset($_POST['marca'])) $vehicle->marca = $_POST['marca'];
@@ -123,9 +134,12 @@ try {
             if (isset($_POST['km'])) $vehicle->km = (int)$_POST['km'];
             if (isset($_POST['preco'])) $vehicle->preco = $_POST['preco'];
             if (isset($_POST['status'])) $vehicle->status = $_POST['status'];
+            if (isset($_POST['data_compra'])) $vehicle->data_compra = $_POST['data_compra'];
             if (isset($_POST['descricao'])) $vehicle->descricao = $_POST['descricao'];
 
-            // imagens: se enviou novas imagens, adiciona às existentes; se enviou 'replace_images' = 1, substitui
+            // A lógica de data_compra está no modelo Vehicle.php no método update()
+
+            // imagens: se enviou novas imagens, adiciona às existentes
             $existing_images = $vehicle->images ?: [];
             $replace = isset($_POST['replace_images']) && $_POST['replace_images'] == '1';
 
@@ -141,6 +155,21 @@ try {
                     if (move_uploaded_file($tmp, $dest)) {
                         $uploaded_urls[] = "/Apolo-Carros-projeto/img/vehicles/" . $safe;
                     }
+                }
+            }
+
+            // Remover imagens se especificado
+            if (isset($_POST['removed_images']) && is_array($_POST['removed_images'])) {
+                foreach ($_POST['removed_images'] as $removed_url) {
+                    $filename = basename($removed_url);
+                    $filepath = $uploadDir . $filename;
+                    if (file_exists($filepath)) {
+                        unlink($filepath);
+                    }
+                    // Remove from existing images array
+                    $existing_images = array_filter($existing_images, function($url) use ($removed_url) {
+                        return $url !== $removed_url;
+                    });
                 }
             }
 
@@ -160,13 +189,22 @@ try {
 
         case 'DELETE':
             $id = $_GET['id'] ?? null;
-            if (!$id) { http_response_code(400); echo json_encode(["success"=>false,"message"=>"ID necessário"]); break; }
+            if (!$id) { 
+                http_response_code(400); 
+                echo json_encode(["success"=>false,"message"=>"ID necessário"]); 
+                break; 
+            }
             $vehicle->id = (int)$id;
-            if (!$vehicle->readOne()) { http_response_code(404); echo json_encode(["success"=>false,"message"=>"Não encontrado"]); break; }
+            if (!$vehicle->readOne()) { 
+                http_response_code(404); 
+                echo json_encode(["success"=>false,"message"=>"Não encontrado"]); 
+                break; 
+            }
             if ($vehicle->delete()) {
                 echo json_encode(["success"=>true,"message"=>"Veículo excluído."]);
             } else {
-                http_response_code(500); echo json_encode(["success"=>false,"message"=>"Erro ao excluir."]);
+                http_response_code(500); 
+                echo json_encode(["success"=>false,"message"=>"Erro ao excluir."]);
             }
             break;
 
@@ -180,3 +218,4 @@ try {
     http_response_code(500);
     echo json_encode(["success"=>false,"message"=>"Erro interno"]);
 }
+?>

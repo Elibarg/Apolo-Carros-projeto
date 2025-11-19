@@ -23,12 +23,23 @@ function renderVehicles(list){
     const tbody = document.querySelector(".data-table tbody");
     tbody.innerHTML = "";
     list.forEach(v => {
+        // Formatar data da compra apenas se o status for "vendido"
+        let purchaseDateDisplay = '-';
+        if (v.data_compra && v.status === 'sold') {
+            // Criar data no fuso horário local para evitar problemas de UTC
+            const dateParts = v.data_compra.split('-');
+            const date = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+            purchaseDateDisplay = date.toLocaleDateString('pt-BR');
+        }
+        
         const tr = document.createElement("tr");
         tr.innerHTML = `
             <td>${v.marca} ${v.modelo}</td>
             <td>${v.ano}</td>
-            <td>${v.km?.toLocaleString?.() ?? v.km}</td>
-                <td><span class="badge ${v.status === 'available' ? 'success' : v.status === 'reserved' ? 'warning' : 'vendido'}">${v.status === 'available' ? 'Disponível' : v.status === 'reserved' ? 'Reservado' : 'vendido'}</span></td>
+            <td>${v.km?.toLocaleString?.() ?? v.km} km</td>
+            <td><span class="badge ${v.status === 'available' ? 'success' : v.status === 'reserved' ? 'warning' : 'Vendido'}">${v.status === 'available' ? 'Disponível' : v.status === 'reserved' ? 'Reservado' : 'Vendido'}</span></td>
+            <td>${purchaseDateDisplay}</td>
+            <td>
                 <a href="editar_estoque.html?id=${v.id}" class="btn btn-sm btn-outline"><i class="fas fa-edit"></i></a>
                 <button class="btn btn-sm btn-danger" onclick="deleteVehicle(${v.id})"><i class="fas fa-trash"></i></button>
             </td>
