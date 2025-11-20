@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vendas | Apolo Carros Admin</title>
-    <!-- CORREÇÃO: Caminhos relativos -->
     <link rel="stylesheet" href="../../css/style.css">
     <link rel="stylesheet" href="../../css/admin.css">
     <link rel="stylesheet" href="../../css/vendas.css">
@@ -14,55 +13,102 @@
     <script src="../../js/componentsAdm.js"></script>
 </head>
 <body>
-    <!-- ✅ MENU SERÁ CARREGADO AQUI -->
     <nav></nav>
-    
-    <!-- ✅ HEADER SERÁ CARREGADO AQUI -->
     <header></header>
+    
     <div class="admin-container">
-        <!-- Sidebar -->
-
-        <!-- Main Content -->
         <main class="admin-main">
-
             <div class="admin-content">
-                <!-- Adicione verificação de admin -->
-                <div id="adminCheck" style="display: none;"></div>
-                
-                <div class="sales-overview">
-                    <div class="stats-grid">
+                <div class="sales-dashboard">
+                    <!-- Cabeçalho -->
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                        <h1>Painel de Vendas</h1>
+                        <button id="refreshSales" class="btn btn-primary">
+                            <i class="fas fa-sync-alt"></i> Atualizar Dados
+                        </button>
+                    </div>
+
+                    <!-- Estatísticas -->
+                    <div class="sales-stats">
                         <div class="stat-card">
-                            <div class="stat-icon" style="background-color: rgba(52, 152, 219, 0.1); color: #3498db;">
-                                <i class="fas fa-car"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3>Veículos Vendidos</h3>
-                                <p class="stat-value">42</p>
-                            </div>
+                            <h3>Veículos Vendidos</h3>
+                            <p class="stat-value" id="totalVendidos">0</p>
+                            <small>Total geral</small>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-icon" style="background-color: rgba(46, 204, 113, 0.1); color: #2ecc71;">
-                                <i class="fas fa-dollar-sign"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3>Faturamento</h3>
-                                <p class="stat-value">R$ 350K</p>
+                            <h3>Faturamento Total</h3>
+                            <p class="stat-value" id="faturamentoTotal">R$ 0</p>
+                            <small>Desde o início</small>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Vendas do Mês</h3>
+                            <p class="stat-value" id="vendasMes">0</p>
+                            <small id="mesAtual">Mês atual</small>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Ticket Médio</h3>
+                            <p class="stat-value" id="ticketMedio">R$ 0</p>
+                            <small>Por veículo</small>
+                        </div>
+                    </div>
+
+                    <!-- Abas -->
+                    <div class="sales-tabs">
+                        <button class="tab-btn active" data-tab="grafico">Gráfico de Vendas</button>
+                        <button class="tab-btn" data-tab="recentes">Vendas Recentes</button>
+                        <button class="tab-btn" data-tab="estoque">Estoque Atual</button>
+                    </div>
+
+                    <!-- Conteúdo das Abas -->
+                    <div class="tab-content active" id="grafico">
+                        <div class="sales-chart">
+                            <h3>Vendas dos Últimos 6 Meses</h3>
+                            <div class="chart-container" id="chartContainer">
+                                <div class="chart-placeholder">
+                                    <i class="fas fa-chart-bar"></i>
+                                    <p>Carregando dados do gráfico...</p>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-header">
-                            <h3>Vendas Mensais</h3>
+                    <div class="tab-content" id="recentes">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Últimas Vendas</h3>
+                            </div>
+                            <div class="table-responsive">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Veículo</th>
+                                            <th>Data da Venda</th>
+                                            <th>Preço</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentSalesTable">
+                                        <tr>
+                                            <td colspan="4" style="text-align: center;">Carregando vendas recentes...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                        <div class="chart-container">
-                            <div class="chart-bars">
-                                <div class="chart-bar" style="height: 30%;" data-month="Jan"></div>
-                                <div class="chart-bar" style="height: 45%;" data-month="Fev"></div>
-                                <div class="chart-bar" style="height: 60%;" data-month="Mar"></div>
-                                <div class="chart-bar" style="height: 75%;" data-month="Abr"></div>
-                                <div class="chart-bar" style="height: 90%;" data-month="Mai"></div>
-                                <div class="chart-bar" style="height: 65%;" data-month="Jun"></div>
+                    </div>
+
+                    <div class="tab-content" id="estoque">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Estoque Disponível</h3>
+                            </div>
+                            <div class="inventory-grid" id="inventoryGrid">
+                                <div class="inventory-item">
+                                    <div class="loading-placeholder">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                        <p>Carregando estoque...</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -71,29 +117,6 @@
         </main>
     </div>
 
-    <script>
-        // Verificar se é admin
-        document.addEventListener('DOMContentLoaded', function() {
-            const userData = AuthService.getUserData();
-            
-            if (userData && userData.tipo_usuario === 'admin') {
-                // É admin - mostrar conteúdo
-                document.getElementById('adminName').innerHTML = 
-                    `${userData.nome_completo} <i class="fas fa-chevron-down"></i>`;
-                
-                console.log('✅ Admin autenticado:', userData);
-            } else {
-                // Não é admin - redirecionar
-                console.log('❌ Acesso negado. Redirecionando...');
-                alert('Acesso restrito a administradores.');
-                window.location.href = '../../html/login.html';
-            }
-        });
-
-        function logout() {
-            AuthService.logout();
-        }
-        
-    </script>
+    <script src="../../js/vendas.js"></script>
 </body>
 </html>

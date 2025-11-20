@@ -1,8 +1,11 @@
+// ====================================
+//  CONFIGURAÇÃO INICIAL
+// ====================================
 const API_URL = "../../backend/api/users.php";
 
-// ===============================
-// ADICIONAR ESTILOS DINAMICAMENTE
-// ===============================
+// ====================================
+//  ESTILOS DINÂMICOS
+// ====================================
 function addDynamicStyles() {
     const style = document.createElement('style');
     style.textContent = `
@@ -144,21 +147,59 @@ function addDynamicStyles() {
     document.head.appendChild(style);
 }
 
+// ====================================
+//  FUNÇÃO PRINCIPAL AO CARREGAR
+// ====================================
 document.addEventListener("DOMContentLoaded", () => {
-    addDynamicStyles(); // Adiciona os estilos primeiro
-    loadUsers(1);
+    addDynamicStyles();
+    loadUsers(1); // AGORA EXISTE
 });
 
-// ===============================
-// RENDERIZAR TABELA (AGORA COM CLASSES)
-// ===============================
+// ====================================
+//  BUSCAR USUÁRIOS NA API
+// ====================================
+function loadUsers(page = 1) {
+    console.log(`[DEBUG] Chamando loadUsers(${page})`);
+
+    fetch(`${API_URL}?page=${page}&limit=10`)
+        .then(res => res.json())
+        .then(data => {
+            console.log("API data:", data);
+
+            if (!data.success || !data.data) {
+                console.warn("Nenhum usuário encontrado ou erro na API");
+                return;
+            }
+
+            renderUsers(data.data.users);
+            renderPagination(data.data.pagination);
+        })
+        .catch(err => console.error("Erro ao carregar usuários:", err));
+}
+
+// ====================================
+//  FORMATAR DATA
+// ====================================
+function formatDate(dateString) {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    return (
+        date.toLocaleDateString("pt-BR") +
+        " " +
+        date.toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' })
+    );
+}
+
+// ====================================
+//  RENDERIZAR TABELA DE USUÁRIOS
+// ====================================
 function renderUsers(users) {
     const tbody = document.getElementById("usersTableBody");
     tbody.innerHTML = "";
 
     users.forEach(user => {
         const tr = document.createElement("tr");
-        
+
         tr.innerHTML = `
             <td>${user.nome_completo}</td>
             <td>${user.email}</td>
@@ -185,54 +226,47 @@ function renderUsers(users) {
     });
 }
 
-// ===============================
-// PAGINAÇÃO COM CLASSES DINÂMICAS
-// ===============================
+// ====================================
+//  PAGINAÇÃO
+// ====================================
 function renderPagination(p) {
     const container = document.getElementById("paginationContainer");
     if (!container) return;
-    
+
     container.innerHTML = "";
     container.className = "dynamic-pagination";
 
-    // Botão Anterior
+    // Botão de página anterior
     const prevButton = document.createElement("button");
     prevButton.innerHTML = `<i class="fas fa-chevron-left"></i>`;
     prevButton.disabled = p.current_page <= 1;
-    prevButton.addEventListener("click", () => {
-        if (p.current_page > 1) loadUsers(p.current_page - 1);
-    });
+    prevButton.addEventListener("click", () => loadUsers(p.current_page - 1));
     container.appendChild(prevButton);
 
-    // Botões numéricos
+    // Páginas
     for (let i = 1; i <= p.total_pages; i++) {
         const button = document.createElement("button");
         button.innerText = i;
-        if (i === p.current_page) button.className = 'active';
+        if (i === p.current_page) button.classList.add('active');
         button.addEventListener("click", () => loadUsers(i));
         container.appendChild(button);
     }
 
-    // Botão Próximo
+    // Botão de próxima página
     const nextButton = document.createElement("button");
     nextButton.innerHTML = `<i class="fas fa-chevron-right"></i>`;
     nextButton.disabled = p.current_page >= p.total_pages;
-    nextButton.addEventListener("click", () => {
-        if (p.current_page < p.total_pages) loadUsers(p.current_page + 1);
-    });
+    nextButton.addEventListener("click", () => loadUsers(p.current_page + 1));
     container.appendChild(nextButton);
 }
 
-
-// ===============================
-// DELETAR USUÁRIO
-// ===============================
+// ====================================
+//  DELETAR USUÁRIO
+// ====================================
 function deleteUser(id) {
-    if (!confirm("Tem certeza que deseja excluir o usuário?")) return;
+    if (!confirm("Tem certeza que deseja excluir este usuário?")) return;
 
-    fetch(`${API_URL}?id=${id}`, {
-        method: "DELETE"
-    })
+    fetch(`${API_URL}?id=${id}`, { method: "DELETE" })
         .then(res => res.json())
         .then(data => {
             alert(data.message);
@@ -241,9 +275,9 @@ function deleteUser(id) {
         .catch(err => console.error("Erro ao excluir usuário:", err));
 }
 
-// ===============================
-// BUSCA (CLIENT-SIDE) NO NOME/EMAIL/TELEFONE/TIPO
-// ===============================
+// ====================================
+//  BUSCA LOCAL (FILTRAR LISTA)
+// ====================================
 document.getElementById("searchButton").addEventListener("click", applySearch);
 document.getElementById("searchInput").addEventListener("keyup", applySearch);
 
