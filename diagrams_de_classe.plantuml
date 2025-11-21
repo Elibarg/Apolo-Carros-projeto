@@ -1,0 +1,197 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+
+' =================== PACOTES ===================
+package "authentication" {
+  class AuthService {
+    +login(email, senha): Usuario
+    +logout(): void
+    +validarSessao(): boolean
+  }
+  
+  class SessionManager {
+    +criarSessao(idUsuario): string
+    +encerrarSessao(): void
+    +getUsuarioLogado(): Usuario
+  }
+}
+
+package "domain.entities" {
+  abstract class Pessoa {
+    +id: int
+    +nome_completo: string
+    +cpf: string
+    +telefone: string
+    +data_nascimento: date
+    +genero: string
+    +ativo: boolean
+  }
+
+  class Usuario {
+    +email: string
+    +senha: string
+    +tipo_usuario: string
+    +data_cadastro: datetime
+    +data_atualizacao: datetime
+    +fazerLogin(): boolean
+    +editarPerfil(): void
+  }
+
+  Usuario --|> Pessoa
+  class Admin
+  class Cliente
+
+  Cliente --|> Usuario
+  Admin --|> Usuario
+  
+  class Veiculo {
+    +id: int
+    +marca: string
+    +modelo: string
+    +ano: int
+    +preco: decimal
+    +combustivel: string
+    +cambio: string
+    +cor: string
+    +descricao: string
+    +status: string
+  }
+  
+  class Imagem {
+    +id: int
+    +veiculo_id: int
+    +url: string
+    +uploadImagem(): boolean
+  }
+
+  Veiculo "1" -- "0..*" Imagem
+
+  class Catalogo {
+    +id: int
+    +nome: string
+    +descricao: string
+    +ativo: boolean
+    +listarVeiculos(): List<Veiculo>
+  }
+
+  Catalogo "1" -- "0..*" Veiculo
+  
+  class Anuncio {
+    +id: int
+    +veiculo_id: int
+    +usuario_id: int
+    +titulo: string
+    +descricao: string
+    +preco: decimal
+    +data_publicacao: datetime
+    +estado_anuncio: string
+    +publicarAnuncio(): void
+    +editarAnuncio(): void
+    +desativarAnuncio(): void
+  }
+
+  Cliente "1" -- "0..*" Anuncio
+}
+
+' =================== REPOSITORIES ===================
+package "repositories" {
+  interface IRepository {
+    +findById(id: int): object
+    +findAll(): List<object>
+    +save(object): boolean
+    +delete(id: int): boolean
+  }
+  
+  class UserRepository
+  class VehicleRepository
+  class AnuncioRepository
+  class ImageRepository
+  
+  IRepository <|.. UserRepository
+  IRepository <|.. VehicleRepository
+  IRepository <|.. AnuncioRepository
+  IRepository <|.. ImageRepository
+}
+
+' =================== SERVICES ===================
+package "services" {
+  class UserService {
+    +atualizarPerfil(): Usuario
+    +alterarSenha(): boolean
+  }
+
+  class VehicleService {
+    +cadastrarVeiculo(): boolean
+    +listarVeiculos(): List<Veiculo>
+  }
+
+  class AnuncioService {
+    +publicarAnuncio(): boolean
+    +buscarAnuncios(): List<Anuncio>
+  }
+
+  class CatalogoService {
+    +adicionarVeiculo(): boolean
+    +removerVeiculo(): boolean
+  }
+
+  UserService --> UserRepository
+  VehicleService --> VehicleRepository
+  AnuncioService --> AnuncioRepository
+  CatalogoService --> VehicleRepository
+}
+
+' =================== CONTROLLERS/API ===================
+package "api.controllers" {
+  class UserController {
+    +getUsuario(): Usuario
+    +update(): boolean
+  }
+  
+  class VehicleController {
+    +listarVeiculos(): List<Veiculo>
+    +salvarVeiculo(): boolean
+  }
+
+  class AnuncioController {
+    +listarAnuncios(): List<Anuncio>
+    +salvarAnuncio(): boolean
+  }
+
+  class ApiGateway
+}
+
+ApiGateway --> UserController
+ApiGateway --> VehicleController
+ApiGateway --> AnuncioController
+
+UserController --> UserService
+VehicleController --> VehicleService
+AnuncioController --> AnuncioService
+
+' =================== UTILS ===================
+package "utils" {
+  class Validator {
+    +validarCPF(): boolean
+    +validarEmail(): boolean
+  }
+
+  class NotificacaoService {
+    +enviarEmail(): void
+    +enviarSMS(): void
+  }
+
+  class ImageProcessor {
+    +compressImage(): string
+    +resizeImage(): string
+  }
+}
+
+' =================== RELACIONAMENTOS IMPORTANTES ===================
+AuthService --> UserRepository
+AuthService --> SessionManager
+VehicleService --> ImageProcessor
+NotificacaoService ..> Usuario
+
+@enduml
