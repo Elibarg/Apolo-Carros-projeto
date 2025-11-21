@@ -18,8 +18,10 @@ class User {
     public $estado;
     public $cidade;
     public $endereco;
+    public $bairro;
     public $telefone;
     public $data_cadastro;
+    public $data_atualizacao;
     public $ativo;
 
     public function __construct($db) {
@@ -29,8 +31,8 @@ class User {
     // Criar novo usuário
     public function create() {
         $query = "INSERT INTO " . $this->table_name . " 
-                 (nome_completo, email, senha, tipo_usuario, data_nascimento, genero, cpf, cep, estado, cidade, endereco, telefone) 
-                 VALUES (:nome_completo, :email, :senha, :tipo_usuario, :data_nascimento, :genero, :cpf, :cep, :estado, :cidade, :endereco, :telefone)";
+                 (nome_completo, email, senha, tipo_usuario, data_nascimento, genero, cpf, cep, estado, cidade, endereco, bairro, telefone) 
+                 VALUES (:nome_completo, :email, :senha, :tipo_usuario, :data_nascimento, :genero, :cpf, :cep, :estado, :cidade, :endereco, :bairro, :telefone)";
         
         $stmt = $this->conn->prepare($query);
 
@@ -42,6 +44,7 @@ class User {
         $this->estado = htmlspecialchars(strip_tags($this->estado));
         $this->cidade = htmlspecialchars(strip_tags($this->cidade));
         $this->endereco = htmlspecialchars(strip_tags($this->endereco));
+        $this->bairro = htmlspecialchars(strip_tags($this->bairro));
         $this->telefone = htmlspecialchars(strip_tags($this->telefone));
         
         // Hash da senha
@@ -64,6 +67,7 @@ class User {
         $stmt->bindParam(":estado", $this->estado);
         $stmt->bindParam(":cidade", $this->cidade);
         $stmt->bindParam(":endereco", $this->endereco);
+        $stmt->bindParam(":bairro", $this->bairro);
         $stmt->bindParam(":telefone", $this->telefone);
 
         if($stmt->execute()) {
@@ -77,7 +81,7 @@ class User {
 
     // Verificar se email existe
     public function emailExists() {
-        $query = "SELECT id, nome_completo, senha, tipo_usuario, avatar_url, data_nascimento, genero, cpf, cep, estado, cidade, endereco, telefone 
+        $query = "SELECT id, nome_completo, senha, tipo_usuario, avatar_url, data_nascimento, genero, cpf, cep, estado, cidade, endereco, bairro, telefone 
                   FROM " . $this->table_name . " 
                   WHERE email = :email 
                   LIMIT 0,1";
@@ -101,6 +105,7 @@ class User {
             $this->estado = $row['estado'];
             $this->cidade = $row['cidade'];
             $this->endereco = $row['endereco'];
+            $this->bairro = $row['bairro'];
             $this->telefone = $row['telefone'];
             
             return true;
@@ -108,92 +113,162 @@ class User {
         return false;
     }
 
-    // ✅ MÉTODO UPDATE CORRIGIDO - ATUALIZA APENAS CAMPOS ENVIADOS
+    // Atualizar usuário
     public function update() {
-        // ✅ CONSTRUIR QUERY DINAMICAMENTE APENAS COM CAMPOS QUE FORAM MODIFICADOS
-        $fields = [];
-        $params = [];
-        
-        // ✅ APENAS CAMPOS QUE EXISTEM NO FORMULÁRIO DO PERFIL
-        if ($this->nome_completo !== null) {
-            $fields[] = "nome_completo = :nome_completo";
-            $params[':nome_completo'] = htmlspecialchars(strip_tags($this->nome_completo));
+        try {
+            error_log("🔧 [update] Iniciando atualização para usuário ID: " . $this->id);
+            
+            $fields = [];
+            $params = [':id' => $this->id];
+            
+            // Campos do formulário
+            if ($this->nome_completo !== null) {
+                $fields[] = "nome_completo = :nome_completo";
+                $params[':nome_completo'] = htmlspecialchars(strip_tags($this->nome_completo));
+            }
+            
+            if ($this->email !== null) {
+                $fields[] = "email = :email";
+                $params[':email'] = htmlspecialchars(strip_tags($this->email));
+            }
+            
+            if ($this->telefone !== null) {
+                $fields[] = "telefone = :telefone";
+                $params[':telefone'] = htmlspecialchars(strip_tags($this->telefone));
+            }
+
+            // Atualizar senha se fornecida
+            if ($this->senha !== null && !empty($this->senha)) {
+                $fields[] = "senha = :senha";
+                $params[':senha'] = password_hash($this->senha, PASSWORD_DEFAULT);
+            }
+            
+            // Campos adicionais
+            if ($this->tipo_usuario !== null) {
+                $fields[] = "tipo_usuario = :tipo_usuario";
+                $params[':tipo_usuario'] = $this->tipo_usuario;
+            }
+            
+            if ($this->data_nascimento !== null) {
+                $fields[] = "data_nascimento = :data_nascimento";
+                $params[':data_nascimento'] = $this->data_nascimento;
+            }
+            
+            if ($this->genero !== null) {
+                $fields[] = "genero = :genero";
+                $params[':genero'] = $this->genero;
+            }
+            
+            if ($this->cpf !== null) {
+                $fields[] = "cpf = :cpf";
+                $params[':cpf'] = htmlspecialchars(strip_tags($this->cpf));
+            }
+            
+            if ($this->cep !== null) {
+                $fields[] = "cep = :cep";
+                $params[':cep'] = htmlspecialchars(strip_tags($this->cep));
+            }
+            
+            if ($this->endereco !== null) {
+                $fields[] = "endereco = :endereco";
+                $params[':endereco'] = htmlspecialchars(strip_tags($this->endereco));
+            }
+            
+            if ($this->bairro !== null) {
+                $fields[] = "bairro = :bairro";
+                $params[':bairro'] = htmlspecialchars(strip_tags($this->bairro));
+            }
+            
+            if ($this->cidade !== null) {
+                $fields[] = "cidade = :cidade";
+                $params[':cidade'] = htmlspecialchars(strip_tags($this->cidade));
+            }
+            
+            if ($this->estado !== null) {
+                $fields[] = "estado = :estado";
+                $params[':estado'] = htmlspecialchars(strip_tags($this->estado));
+            }
+            
+            // Sempre atualizar data_atualizacao
+            $fields[] = "data_atualizacao = CURRENT_TIMESTAMP";
+            
+            if (empty($fields)) {
+                error_log("ℹ️ [update] Nenhum campo para atualizar");
+                return true;
+            }
+            
+            $query = "UPDATE " . $this->table_name . " SET " . implode(', ', $fields) . " WHERE id = :id";
+            
+            error_log("📝 [update] Query: " . $query);
+            
+            $stmt = $this->conn->prepare($query);
+            
+            // Bind dos parâmetros
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            
+            $result = $stmt->execute();
+            
+            if ($result) {
+                error_log("✅ [update] Atualização bem-sucedida para usuário ID: " . $this->id);
+                return true;
+            } else {
+                $errorInfo = $stmt->errorInfo();
+                error_log("❌ [update] Erro na execução: " . implode(" | ", $errorInfo));
+                return false;
+            }
+            
+        } catch (Exception $e) {
+            error_log("💥 [update] Exception: " . $e->getMessage());
+            return false;
         }
-        
-        if ($this->email !== null) {
-            $fields[] = "email = :email";
-            $params[':email'] = htmlspecialchars(strip_tags($this->email));
-        }
-        
-        if ($this->telefone !== null) {
-            $fields[] = "telefone = :telefone";
-            $params[':telefone'] = htmlspecialchars(strip_tags($this->telefone));
-        }
-        
-        // ✅ SEMPRE ATUALIZAR DATA_ATUALIZACAO
-        $fields[] = "data_atualizacao = CURRENT_TIMESTAMP";
-        
-        // ✅ SE NÃO HÁ CAMPOS PARA ATUALIZAR, RETORNA TRUE
-        if (empty($fields)) {
-            error_log("ℹ️ Nenhum campo para atualizar");
-            return true;
-        }
-        
-        // ✅ CONSTRUIR QUERY FINAL
-        $query = "UPDATE " . $this->table_name . " SET " . implode(', ', $fields) . " WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        
-        error_log("📝 Query UPDATE: " . $query);
-        
-        // ✅ BIND PARAMS
-        $stmt->bindParam(":id", $this->id);
-        foreach ($params as $key => &$value) {
-            $stmt->bindParam($key, $value);
-        }
-        
-        if($stmt->execute()) {
-            error_log("✅ UPDATE executado com sucesso para usuário ID: " . $this->id);
-            return true;
-        }
-        
-        // ✅ LOG DE ERRO DETALHADO
-        $errorInfo = $stmt->errorInfo();
-        error_log("❌ Erro no UPDATE: " . implode(", ", $errorInfo));
-        return false;
     }
 
     // Buscar usuário por ID
     public function readOne() {
-        $query = "SELECT id, nome_completo, email, tipo_usuario, avatar_url, data_nascimento, genero, cpf, cep, estado, cidade, endereco, telefone, data_cadastro 
-              FROM " . $this->table_name . " 
-              WHERE id = :id 
-              LIMIT 0,1";
+        try {
+            if (empty($this->id)) {
+                return false;
+            }
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":id", $this->id);
-        $stmt->execute();
-
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if($row) {
-            $this->id = $row['id'];
-            $this->nome_completo = $row['nome_completo'];
-            $this->email = $row['email'];
-            $this->tipo_usuario = $row['tipo_usuario'];
-            $this->avatar_url = $row['avatar_url'];
-            $this->data_nascimento = $row['data_nascimento'];
-            $this->genero = $row['genero'];
-            $this->cpf = $row['cpf'];
-            $this->cep = $row['cep'];
-            $this->estado = $row['estado'];
-            $this->cidade = $row['cidade'];
-            $this->endereco = $row['endereco'];
-            $this->telefone = $row['telefone'];
-            $this->data_cadastro = $row['data_cadastro'];
+            $query = "SELECT id, nome_completo, email, tipo_usuario, avatar_url, data_nascimento, genero, cpf, cep, estado, cidade, endereco, bairro, telefone, data_cadastro 
+                      FROM " . $this->table_name . " 
+                      WHERE id = :id 
+                      LIMIT 1";
             
-            return true;
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindValue(":id", $this->id, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($row) {
+                $this->id = $row['id'];
+                $this->nome_completo = $row['nome_completo'] ?? null;
+                $this->email = $row['email'] ?? null;
+                $this->tipo_usuario = $row['tipo_usuario'] ?? null;
+                $this->avatar_url = $row['avatar_url'] ?? null;
+                $this->data_nascimento = $row['data_nascimento'] ?? null;
+                $this->genero = $row['genero'] ?? null;
+                $this->cpf = $row['cpf'] ?? null;
+                $this->cep = $row['cep'] ?? null;
+                $this->estado = $row['estado'] ?? null;
+                $this->cidade = $row['cidade'] ?? null;
+                $this->endereco = $row['endereco'] ?? null;
+                $this->bairro = $row['bairro'] ?? null;
+                $this->telefone = $row['telefone'] ?? null;
+                $this->data_cadastro = $row['data_cadastro'] ?? null;
+                
+                return true;
+            }
+            
+            return false;
+            
+        } catch (Exception $e) {
+            error_log("Erro readOne: " . $e->getMessage());
+            return false;
         }
-        return false;
     }
 
     // Atualizar avatar
@@ -227,30 +302,6 @@ class User {
         return false;
     }
 
-    // ✅ ATUALIZAR SENHA DO USUÁRIO
-    public function updatePassword() {
-        $query = "UPDATE " . $this->table_name . " 
-                  SET senha = :senha,
-                      data_atualizacao = CURRENT_TIMESTAMP
-                  WHERE id = :id";
-        
-        $stmt = $this->conn->prepare($query);
-
-        // ✅ HASH DA NOVA SENHA
-        $this->senha = password_hash($this->senha, PASSWORD_DEFAULT);
-
-        $stmt->bindParam(":senha", $this->senha);
-        $stmt->bindParam(":id", $this->id);
-
-        if($stmt->execute()) {
-            error_log("✅ Senha atualizada para usuário ID: " . $this->id);
-            return true;
-        }
-        
-        error_log("❌ Erro ao atualizar senha: " . implode(", ", $stmt->errorInfo()));
-        return false;
-    }
-
     // Buscar usuários por estado
     public function readByState($estado) {
         $query = "SELECT id, nome_completo, email, cidade, telefone 
@@ -267,25 +318,24 @@ class User {
 
     // Listar todos os usuários (para admin)
     public function readAll($from_record_num = 0, $records_per_page = 10) {
-    $query = "SELECT 
-                id, 
-                nome_completo, 
-                email, 
-                tipo_usuario, 
-                telefone,
-                data_cadastro
-              FROM " . $this->table_name . "
-              ORDER BY data_cadastro DESC
-              LIMIT :from_record_num, :records_per_page";
+        $query = "SELECT 
+                    id, 
+                    nome_completo, 
+                    email, 
+                    tipo_usuario, 
+                    telefone,
+                    data_cadastro
+                  FROM " . $this->table_name . "
+                  ORDER BY data_cadastro DESC
+                  LIMIT :from_record_num, :records_per_page";
 
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(":from_record_num", $from_record_num, PDO::PARAM_INT);
-    $stmt->bindParam(":records_per_page", $records_per_page, PDO::PARAM_INT);
-    $stmt->execute();
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":from_record_num", $from_record_num, PDO::PARAM_INT);
+        $stmt->bindParam(":records_per_page", $records_per_page, PDO::PARAM_INT);
+        $stmt->execute();
 
-    return $stmt;
-}
-
+        return $stmt;
+    }
 
     // Contar total de usuários
     public function countAll() {
@@ -299,7 +349,7 @@ class User {
         return $row['total_rows'];
     }
 
-    // ✅ MÉTODO DELETE PARA EXCLUSÃO FÍSICA
+    // Excluir usuário
     public function delete() {
         $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";
         
