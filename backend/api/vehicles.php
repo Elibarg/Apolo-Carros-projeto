@@ -50,16 +50,17 @@ try {
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
             $destaque = isset($_GET['destaque']) ? $_GET['destaque'] : null;
+            $status = isset($_GET['status']) ? $_GET['status'] : null; // ✅ NOVO FILTRO
             $offset = ($page - 1) * $limit;
 
-            $stmt = $vehicle->readAll($offset, $limit, $destaque);
+            $stmt = $vehicle->readAll($offset, $limit, $destaque, $status);
             $vehicles = $stmt->fetchAll(PDO::FETCH_ASSOC);
             // decode images
             foreach ($vehicles as &$v) {
                 $v['images'] = $v['images'] ? json_decode($v['images'], true) : [];
             }
 
-            $total = $vehicle->countAll($destaque);
+            $total = $vehicle->countAll($destaque, $status);
             echo json_encode([
                 "success" => true,
                 "data" => [

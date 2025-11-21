@@ -22,10 +22,10 @@
     font-weight: 700;
 }
 
-/* Grid de Estatísticas Melhorado */
+/* Grid de Estatísticas Melhorado - AGORA COM 3 CARDS */
 .sales-stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2.5rem;
 }
@@ -60,9 +60,7 @@
     background: linear-gradient(90deg, #e74c3c, #c0392b);
 }
 
-.stat-card:nth-child(4)::before {
-    background: linear-gradient(90deg, #f39c12, #e67e22);
-}
+/* REMOVIDO: .stat-card:nth-child(4) - Ticket Médio */
 
 .stat-card:hover {
     transform: translateY(-5px);
@@ -426,6 +424,12 @@ tr:hover td {
 
 /* Responsividade Melhorada */
 @media (max-width: 1200px) {
+    .sales-stats {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 992px) {
     .sales-stats {
         grid-template-columns: repeat(2, 1fr);
     }

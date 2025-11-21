@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financiamento | Apolo Carros</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/financeiro.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../js/components.js"></script>
+</head>
+<body>
+    <header >
+    </header>
+    <nav></nav>
+
+    <main class="main-content">
+        <div class="breadcrumb">
+            <div class="container">
+                <a href="../html/index.html">Home</a> &gt; <span>Financiamento</span>
+            </div>
+        </div>
+
+        <section class="finance-section">
+            <div class="container">
+                <h1>Financiamento</h1>
+                
+                <div class="finance-calculator">
+                    <form class="calculator-form">
+                        <div class="form-group">
+                            <label for="car-value">Valor do Carro (R$)</label>
+                            <input type="number" id="car-value" min="0" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="down-payment">Valor da Entrada (R$)</label>
+                            <input type="number" id="down-payment" min="0" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="term">Prazo (em meses)</label>
+                            <select id="term" required>
+                                <option value="12">12 meses</option>
+                                <option value="24">24 meses</option>
+                                <option value="36">36 meses</option>
+                                <option value="48" selected>48 meses</option>
+                                <option value="60">60 meses</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" id="calculate" class="btn btn-primary">Calcular Parcelas</button>
+                        </div>
+                    </form>
+                    
+                    <div class="result" id="result" style="display: none;">
+                        <h3>Resultado da Simulação</h3>
+                        <div class="result-grid">
+                            <div class="result-item">
+                                <span class="label">Valor Financiado</span>
+                                <span class="value" id="financed-amount">R$ 0,00</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="label">Parcelas</span>
+                                <span class="value" id="installments">0x R$ 0,00</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="label">Total a Pagar</span>
+                                <span class="value" id="total-amount">R$ 0,00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="consultant-form">
+                    <h2>Fale com um consultor</h2>
+                    <form>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label for="name">Nome</label>
+                                <input type="text" id="name" required>
+                            </div>
+                            <div class="form-col">
+                                <label for="email">E-mail</label>
+                                <input type="email" id="email" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label for="phone">Telefone</label>
+                                <input type="tel" id="phone" required>
+                            </div>
+                            <div class="form-col">
+                                <label for="car-model">Modelo de Interesse</label>
+                                <input type="text" id="car-model">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Enviar Interesse</button>
+                        </div> 
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer >
+    </footer>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

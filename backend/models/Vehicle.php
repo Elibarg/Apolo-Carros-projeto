@@ -80,13 +80,19 @@ class Vehicle {
         return false;
     }
 
-    // Listar com paginação e filtro por destaque
-    public function readAll($from_record_num = 0, $records_per_page = 10, $destaque = null) {
+    // Listar com paginação e filtro por destaque e status
+    public function readAll($from_record_num = 0, $records_per_page = 10, $destaque = null, $status = null) {
         $whereConditions = ["ativo = 1"];
         $params = [];
 
         if ($destaque !== null) {
             $whereConditions[] = "destaque = :destaque";
+            $params[':destaque'] = $destaque;
+        }
+        
+        if ($status !== null) {
+            $whereConditions[] = "status = :status";
+            $params[':status'] = $status;
         }
 
         $whereClause = implode(" AND ", $whereConditions);
@@ -98,9 +104,11 @@ class Vehicle {
         
         $stmt = $this->conn->prepare($query);
         
-        if ($destaque !== null) {
-            $stmt->bindParam(":destaque", $destaque);
+        // Bind dos parâmetros
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
         }
+        
         $stmt->bindParam(":from_record_num", $from_record_num, PDO::PARAM_INT);
         $stmt->bindParam(":records_per_page", $records_per_page, PDO::PARAM_INT);
         
@@ -108,21 +116,27 @@ class Vehicle {
         return $stmt;
     }
 
-    // Contar total com filtro por destaque
-    public function countAll($destaque = null) {
+    // Contar total com filtro por destaque e status
+    public function countAll($destaque = null, $status = null) {
         $whereConditions = ["ativo = 1"];
         $params = [];
 
         if ($destaque !== null) {
             $whereConditions[] = "destaque = :destaque";
+            $params[':destaque'] = $destaque;
+        }
+        
+        if ($status !== null) {
+            $whereConditions[] = "status = :status";
+            $params[':status'] = $status;
         }
 
         $whereClause = implode(" AND ", $whereConditions);
         $query = "SELECT COUNT(*) as total_rows FROM " . $this->table_name . " WHERE $whereClause";
         $stmt = $this->conn->prepare($query);
         
-        if ($destaque !== null) {
-            $stmt->bindParam(":destaque", $destaque);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
         }
         
         $stmt->execute();
