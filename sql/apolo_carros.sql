@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 21/11/2025 às 21:56
+-- Tempo de geração: 25/11/2025 às 17:13
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -88,9 +88,9 @@ CREATE TABLE `veiculos` (
 
 INSERT INTO `veiculos` (`id`, `marca`, `modelo`, `ano`, `km`, `preco`, `status`, `data_compra`, `images`, `descricao`, `data_cadastro`, `data_atualizacao`, `ativo`, `destaque`) VALUES
 (1, 'Chevrolet', 'Onix LT', 2021, 95000, 75000.00, 'sold', '2025-10-11', '[\"\\/Apolo-Carros-projeto\\/img\\/Chevrolet_Onix.png\"]', 'Sedan econômico, revisado.', '2025-11-17 09:40:30', '2025-11-19 20:51:43', 1, 'sim'),
-(2, 'Chevrolet', 'h423', 2000, 200, 22.00, 'reserved', NULL, '[\"\\/Apolo-Carros-projeto\\/img\\/vehicles\\/veh_691aeffd050bc5.33996938.jpg\",\"\\/Apolo-Carros-projeto\\/img\\/vehicles\\/veh_691af37e0dc097.17956944.webp\"]', '', '2025-11-17 09:50:53', '2025-11-21 10:10:01', 1, 'sim'),
+(2, 'Chevrolet', 'h423', 2000, 200, 22.00, 'reserved', NULL, '[\"\\/Apolo-Carros-projeto\\/img\\/vehicles\\/veh_691aeffd050bc5.33996938.jpg\",\"\\/Apolo-Carros-projeto\\/img\\/vehicles\\/veh_691af37e0dc097.17956944.webp\"]', '', '2025-11-17 09:50:53', '2025-11-24 09:27:41', 1, 'nao'),
 (3, 'Sedan X3', 'Sedan X3', 2222, 400, 45000.00, 'available', NULL, '[\"\\/Apolo-Carros-projeto\\/img\\/vehicles\\/veh_691af3a942a218.83267900.jpg\",\"\\/Apolo-Carros-projeto\\/img\\/vehicles\\/veh_691af3a94ddb78.87749105.webp\"]', '', '2025-11-17 10:06:33', '2025-11-21 10:09:46', 1, 'sim'),
-(4, 'h42398', 'h42398', 8888, 786, 67999.00, 'sold', '2025-08-22', '[]', '', '2025-11-19 09:37:17', '2025-11-19 20:53:08', 1, 'sim');
+(4, 'h42398', 'h42398', 8888, 786, 67999.00, 'sold', '2025-08-22', '[\"\\/Apolo-Carros-projeto\\/img\\/vehicles\\/veh_69243160447281.49474504.jpg\"]', '', '2025-11-19 09:37:17', '2025-11-24 10:20:16', 1, 'nao');
 
 --
 -- Índices para tabelas despejadas

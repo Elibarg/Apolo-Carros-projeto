@@ -25,11 +25,16 @@ if ($method === 'POST' && isset($_POST['_method'])) {
 }
 
 try {
-    // proteger rotas de administração
-    if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || ($_SESSION['user_type'] ?? '') !== 'admin') {
-        http_response_code(401);
-        echo json_encode(["success" => false, "message" => "Não autorizado."]);
-        exit;
+    // ✅ CORREÇÃO: Permitir acesso público apenas para GET (listar veículos)
+    if ($method === 'GET') {
+        // Acesso público permitido para listar veículos
+    } else {
+        // Para outros métodos (POST, PUT, DELETE), verificar autenticação de admin
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || ($_SESSION['user_type'] ?? '') !== 'admin') {
+            http_response_code(401);
+            echo json_encode(["success" => false, "message" => "Não autorizado."]);
+            exit;
+        }
     }
 
     switch ($method) {
@@ -50,17 +55,21 @@ try {
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
             $destaque = isset($_GET['destaque']) ? $_GET['destaque'] : null;
-            $status = isset($_GET['status']) ? $_GET['status'] : null; // ✅ NOVO FILTRO
+            $marca = isset($_GET['marca']) ? $_GET['marca'] : null;
+            $status = isset($_GET['status']) ? $_GET['status'] : null;
+            $preco_min = isset($_GET['preco_min']) ? (float)$_GET['preco_min'] : null;
+            $preco_max = isset($_GET['preco_max']) ? (float)$_GET['preco_max'] : null;
+            
             $offset = ($page - 1) * $limit;
 
-            $stmt = $vehicle->readAll($offset, $limit, $destaque, $status);
+            $stmt = $vehicle->readAll($offset, $limit, $destaque, $marca, $status, $preco_min, $preco_max);
             $vehicles = $stmt->fetchAll(PDO::FETCH_ASSOC);
             // decode images
             foreach ($vehicles as &$v) {
                 $v['images'] = $v['images'] ? json_decode($v['images'], true) : [];
             }
 
-            $total = $vehicle->countAll($destaque, $status);
+            $total = $vehicle->countAll($destaque, $marca, $status, $preco_min, $preco_max);
             echo json_encode([
                 "success" => true,
                 "data" => [
@@ -76,7 +85,7 @@ try {
             break;
 
         case 'POST':
-            // criar veículo (FormData com arquivos)
+            // criar veículo (FormData com arquivos) - APENAS ADMIN
             $vehicle->marca = $_POST['marca'] ?? null;
             $vehicle->modelo = $_POST['modelo'] ?? null;
             $vehicle->ano = isset($_POST['ano']) ? (int)$_POST['ano'] : null;
@@ -116,7 +125,7 @@ try {
             break;
 
         case 'PUT':
-            // update via FormData + _method=PUT
+            // update via FormData + _method=PUT - APENAS ADMIN
             $id = $_POST['id'] ?? null;
             if (!$id) { 
                 http_response_code(400); 

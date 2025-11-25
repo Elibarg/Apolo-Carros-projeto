@@ -80,8 +80,8 @@ class Vehicle {
         return false;
     }
 
-    // Listar com paginação e filtro por destaque e status
-    public function readAll($from_record_num = 0, $records_per_page = 10, $destaque = null, $status = null) {
+    // Listar com paginação e filtros
+    public function readAll($from_record_num = 0, $records_per_page = 10, $destaque = null, $marca = null, $status = null, $preco_min = null, $preco_max = null) {
         $whereConditions = ["ativo = 1"];
         $params = [];
 
@@ -90,9 +90,24 @@ class Vehicle {
             $params[':destaque'] = $destaque;
         }
         
+        if ($marca !== null) {
+            $whereConditions[] = "marca = :marca";
+            $params[':marca'] = $marca;
+        }
+        
         if ($status !== null) {
             $whereConditions[] = "status = :status";
             $params[':status'] = $status;
+        }
+        
+        if ($preco_min !== null) {
+            $whereConditions[] = "preco >= :preco_min";
+            $params[':preco_min'] = $preco_min;
+        }
+        
+        if ($preco_max !== null) {
+            $whereConditions[] = "preco <= :preco_max";
+            $params[':preco_max'] = $preco_max;
         }
 
         $whereClause = implode(" AND ", $whereConditions);
@@ -116,8 +131,8 @@ class Vehicle {
         return $stmt;
     }
 
-    // Contar total com filtro por destaque e status
-    public function countAll($destaque = null, $status = null) {
+    // Contar total com filtros
+    public function countAll($destaque = null, $marca = null, $status = null, $preco_min = null, $preco_max = null) {
         $whereConditions = ["ativo = 1"];
         $params = [];
 
@@ -126,9 +141,24 @@ class Vehicle {
             $params[':destaque'] = $destaque;
         }
         
+        if ($marca !== null) {
+            $whereConditions[] = "marca = :marca";
+            $params[':marca'] = $marca;
+        }
+        
         if ($status !== null) {
             $whereConditions[] = "status = :status";
             $params[':status'] = $status;
+        }
+        
+        if ($preco_min !== null) {
+            $whereConditions[] = "preco >= :preco_min";
+            $params[':preco_min'] = $preco_min;
+        }
+        
+        if ($preco_max !== null) {
+            $whereConditions[] = "preco <= :preco_max";
+            $params[':preco_max'] = $preco_max;
         }
 
         $whereClause = implode(" AND ", $whereConditions);
