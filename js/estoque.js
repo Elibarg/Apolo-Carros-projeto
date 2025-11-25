@@ -23,10 +23,8 @@ function renderVehicles(list){
     const tbody = document.querySelector(".data-table tbody");
     tbody.innerHTML = "";
     list.forEach(v => {
-        // Formatar data da compra apenas se o status for "vendido"
         let purchaseDateDisplay = '-';
         if (v.data_compra && v.status === 'sold') {
-            // Criar data no fuso horário local para evitar problemas de UTC
             const dateParts = v.data_compra.split('-');
             const date = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
             purchaseDateDisplay = date.toLocaleDateString('pt-BR');
@@ -35,9 +33,12 @@ function renderVehicles(list){
         const tr = document.createElement("tr");
         tr.innerHTML = `
             <td>${v.marca} ${v.modelo}</td>
+            <td>${getCategoriaLabel(v.categoria)}</td>
+            <td>${getCombustivelLabel(v.combustivel)}</td>
+            <td>${getCambioLabel(v.cambio)}</td>
             <td>${v.ano}</td>
             <td>${v.km?.toLocaleString?.() ?? v.km} km</td>
-            <td><span class="badge ${v.status === 'available' ? 'success' : v.status === 'reserved' ? 'warning' : 'Vendido'}">${v.status === 'available' ? 'Disponível' : v.status === 'reserved' ? 'Reservado' : 'Vendido'}</span></td>
+            <td><span class="badge ${getStatusClass(v.status)}">${getStatusLabel(v.status)}</span></td>
             <td>${purchaseDateDisplay}</td>
             <td>
                 <a href="editar_estoque.html?id=${v.id}" class="btn btn-sm btn-outline"><i class="fas fa-edit"></i></a>
@@ -46,6 +47,55 @@ function renderVehicles(list){
         `;
         tbody.appendChild(tr);
     });
+}
+
+// Funções auxiliares para labels
+function getCategoriaLabel(categoria) {
+    const categorias = {
+        'carros_eletricos': 'Carros Elétricos',
+        'hatches': 'Hatches',
+        'picapes': 'Picapes',
+        'carros_economicos': 'Carros Econômicos'
+    };
+    return categorias[categoria] || '-';
+}
+
+function getCombustivelLabel(combustivel) {
+    const combustiveis = {
+        'gasolina': 'Gasolina',
+        'alcool': 'Álcool',
+        'flex': 'Flex',
+        'diesel': 'Diesel',
+        'eletrico': 'Elétrico',
+        'hibrido': 'Híbrido'
+    };
+    return combustiveis[combustivel] || '-';
+}
+
+function getCambioLabel(cambio) {
+    const cambios = {
+        'manual': 'Manual',
+        'automatico': 'Automático'
+    };
+    return cambios[cambio] || '-';
+}
+
+function getStatusLabel(status) {
+    const statusLabels = {
+        'available': 'DISPONÍVEL',
+        'reserved': 'RESERVADO',
+        'sold': 'VENDIDO'
+    };
+    return statusLabels[status] || status;
+}
+
+function getStatusClass(status) {
+    const statusClasses = {
+        'available': 'success',
+        'reserved': 'warning',
+        'sold': 'danger'
+    };
+    return statusClasses[status] || 'secondary';
 }
 
 function renderPagination(p) {

@@ -13,92 +13,175 @@ if (!vehicleId) {
 }
 
 // VARIÁVEIS GLOBAIS
-let existingImages = [];  // Imagens já salvas no servidor
-let removedImages = [];   // Imagens que o usuário quer excluir
-let newImages = [];       // Novas imagens selecionadas
+let existingImages = [];
+let removedImages = [];
+let newImages = [];
 
 // ===============================
-// CARREGAR DADOS DO VEÍCULO
+// TRATAMENTO DE RESPOSTA DA API
 // ===============================
-fetch(`${API_URL}?id=${vehicleId}`)
-    .then(res => res.json())
-    .then(data => {
-        if (!data.success) {
-            alert("Erro ao carregar veículo.");
-            return;
+async function handleApiResponse(response) {
+    const contentType = response.headers.get('content-type');
+
+    if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Resposta não-JSON:', text.substring(0, 200));
+        
+        if (response.status === 401) {
+            throw new Error('Não autorizado');
+        }
+        
+        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+    }
+    return response.json();
+}
+
+// ===============================
+// CARREGAR DADOS DO VEÍCULO (CORRIGIDO)
+// ===============================
+function loadVehicleData() {
+    console.log('Carregando veículo ID:', vehicleId);
+
+    fetch(`${API_URL}?id=${vehicleId}`, {
+        method: 'GET',
+        credentials: 'include', // Envia cookies de sessão
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (response.status === 401) {
+            throw new Error('Não autorizado');
+        }
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return handleApiResponse(response);
+    })
+    .then(result => {
+        if (!result.success) {
+            throw new Error(result.message || 'Erro ao carregar veículo');
         }
 
-        const v = data.data;
-
-        document.getElementById("vehicleId").value = v.id;
-        document.getElementById("marca").value = v.marca;
-        document.getElementById("modelo").value = v.modelo;
-        document.getElementById("ano").value = v.ano;
-        document.getElementById("km").value = v.km;
-        document.getElementById("preco").value = v.preco;
-        document.getElementById("status").value = v.status;
-        document.getElementById("destaque").value = v.destaque || "nao";
-        document.getElementById("descricao").value = v.descricao || "";
-
-        // Preencher data de compra se existir
-        if (v.data_compra) {
-            document.getElementById("data_compra").value = v.data_compra;
+        const vehicle = result.data;
+        
+        if (!vehicle) {
+            throw new Error('Veículo não encontrado');
         }
 
-        // Mostrar/ocultar data de compra baseado no status
-        togglePurchaseDate(v.status);
+        console.log("Veículo carregado com sucesso:", vehicle);
 
-        // Carregar imagens existentes
-        existingImages = v.images || [];
+        fillForm(vehicle);
+
+        existingImages = Array.isArray(vehicle.images) ? vehicle.images : [];
         loadExistingImages(existingImages);
         updateImageStats();
     })
-    .catch(err => {
-        console.error("Erro ao carregar veículo:", err);
-        alert("Erro ao carregar dados do veículo.");
+    .catch(error => {
+        console.error("Erro ao carregar veículo:", error);
+        
+        if (error.message.includes('Não autorizado')) {
+            alert("Acesso restrito a administradores. Faça login como administrador.");
+            window.location.href = '../../html/login.html';
+        } else {
+            alert("Erro ao carregar veículo: " + error.message);
+            window.history.back();
+        }
     });
+}
+
+// ===============================
+// PREENCHER FORMULÁRIO
+// ===============================
+function fillForm(vehicle) {
+    const fields = {
+        'vehicleId': vehicle.id,
+        'marca': vehicle.marca || '',
+        'modelo': vehicle.modelo || '',
+        'ano': vehicle.ano || '',
+        'km': vehicle.km || 0,
+        'preco': vehicle.preco || 0,
+        'status': vehicle.status || 'available',
+        'destaque': vehicle.destaque || 'nao',
+        'categoria': vehicle.categoria || '',
+        'combustivel': vehicle.combustivel || '',
+        'cambio': vehicle.cambio || '',
+        'descricao': vehicle.descricao || '',
+        'data_compra': vehicle.data_compra || ''
+    };
+
+    Object.keys(fields).forEach(fieldId => {
+        const element = document.getElementById(fieldId);
+        if (element) {
+            element.value = fields[fieldId];
+        }
+    });
+
+    togglePurchaseDate(vehicle.status);
+}
 
 // ===============================
 // TOGGLE DATA DE COMPRA
 // ===============================
 function togglePurchaseDate(status) {
     const purchaseDateGroup = document.getElementById("purchaseDateGroup");
-    purchaseDateGroup.style.display = (status === 'sold') ? 'block' : 'none';
+    if (purchaseDateGroup) {
+        purchaseDateGroup.style.display = (status === 'sold') ? 'block' : 'none';
+    }
 }
-
-// Event listener para mudança de status
-document.getElementById("status").addEventListener("change", function() {
-    togglePurchaseDate(this.value);
-});
 
 // ===============================
 // GERENCIAMENTO DE IMAGENS EXISTENTES
 // ===============================
 function loadExistingImages(images) {
     const imageGrid = document.getElementById("imageGrid");
+    if (!imageGrid) return;
+    
     const uploadBtn = imageGrid.querySelector('.upload-new');
     imageGrid.innerHTML = '';
-    imageGrid.appendChild(uploadBtn);
+    
+    if (uploadBtn) {
+        imageGrid.appendChild(uploadBtn);
+    }
 
     images.forEach((imgUrl, index) => {
+        if (!imgUrl) return;
+        
         const imgContainer = document.createElement('div');
         imgContainer.className = 'image-preview';
+        
+        let imageSrc = imgUrl;
+        if (imgUrl && !imgUrl.startsWith('http') && !imgUrl.startsWith('/')) {
+            imageSrc = '/' + imgUrl;
+        }
+        if (!imageSrc.startsWith('http') && !imageSrc.startsWith('/')) {
+            imageSrc = '../../' + imageSrc;
+        }
+        
         imgContainer.innerHTML = `
-            <img src="..${imgUrl}" alt="Imagem veículo ${index + 1}" onerror="this.src='../../img/placeholder-car.jpg'">
+            <img src="${imageSrc}" alt="Imagem veículo ${index + 1}" onerror="this.src='../../img/placeholder-car.jpg'">
             <button type="button" class="remove-image" data-index="${index}">
                 <i class="fas fa-times"></i>
             </button>
         `;
-        imageGrid.insertBefore(imgContainer, uploadBtn);
+        
+        if (uploadBtn) {
+            imageGrid.insertBefore(imgContainer, uploadBtn);
+        } else {
+            imageGrid.appendChild(imgContainer);
+        }
     });
 
     document.querySelectorAll('.remove-image').forEach(btn => {
         btn.addEventListener('click', function() {
             const index = parseInt(this.getAttribute('data-index'));
-            removedImages.push(existingImages[index]);
-            existingImages.splice(index, 1);
-            loadExistingImages(existingImages);
-            updateImageStats();
+            if (index >= 0 && index < existingImages.length) {
+                removedImages.push(existingImages[index]);
+                existingImages.splice(index, 1);
+                loadExistingImages(existingImages);
+                updateImageStats();
+            }
         });
     });
 }
@@ -111,6 +194,8 @@ function previewNewImage(file) {
     
     reader.onload = function(e) {
         const imageGrid = document.getElementById("imageGrid");
+        if (!imageGrid) return;
+        
         const uploadBtn = imageGrid.querySelector('.upload-new');
         const imgContainer = document.createElement('div');
         imgContainer.className = 'image-preview new-image';
@@ -122,7 +207,11 @@ function previewNewImage(file) {
             </button>
         `;
 
-        imageGrid.insertBefore(imgContainer, uploadBtn);
+        if (uploadBtn) {
+            imageGrid.insertBefore(imgContainer, uploadBtn);
+        } else {
+            imageGrid.appendChild(imgContainer);
+        }
 
         imgContainer.querySelector('.remove-new-image').addEventListener('click', function() {
             const index = newImages.indexOf(file);
@@ -137,35 +226,39 @@ function previewNewImage(file) {
 // ===============================
 // CAPTURA DE ARQUIVOS
 // ===============================
-document.addEventListener('DOMContentLoaded', function() {
+function setupFileUpload() {
     const fileInput = document.getElementById('imageInput');
     const uploadArea = document.querySelector('.upload-new');
 
-    // Clique -> Abre seletor
-    uploadArea.addEventListener('click', () => fileInput.click());
+    if (uploadArea && fileInput) {
+        uploadArea.addEventListener('click', () => fileInput.click());
 
-    // Mudança no input file
-    fileInput.addEventListener('change', function(e) {
-        const files = Array.from(e.target.files);
-        
-        files.forEach(file => {
-            if (!file.type.startsWith('image/')) return alert('Selecione apenas imagens.');
-            newImages.push(file);
-            previewNewImage(file);
+        fileInput.addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            
+            files.forEach(file => {
+                if (!file.type.startsWith('image/')) {
+                    alert('Selecione apenas imagens.');
+                    return;
+                }
+                newImages.push(file);
+                previewNewImage(file);
+            });
+
+            e.target.value = '';
+            updateImageStats();
         });
 
-        e.target.value = ''; // Permite selecionar de novo
-        updateImageStats();
-    });
-
-    setupDragAndDrop();
-});
+        setupDragAndDrop();
+    }
+}
 
 // ===============================
 // DRAG AND DROP
 // ===============================
 function setupDragAndDrop() {
     const uploadArea = document.querySelector('.upload-new');
+    if (!uploadArea) return;
     
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         uploadArea.addEventListener(eventName, e => {
@@ -178,7 +271,10 @@ function setupDragAndDrop() {
         const files = Array.from(e.dataTransfer.files);
         
         files.forEach(file => {
-            if (!file.type.startsWith('image/')) return alert('Selecione apenas imagens.');
+            if (!file.type.startsWith('image/')) {
+                alert('Selecione apenas imagens.');
+                return;
+            }
             newImages.push(file);
             previewNewImage(file);
         });
@@ -200,56 +296,95 @@ function updateImageStats() {
     if (removedEl) removedEl.textContent = removedImages.length;
 }
 
-
 // ===============================
-// SALVAR ALTERAÇÕES
+// SALVAR ALTERAÇÕES (CORRIGIDO)
 // ===============================
-document.getElementById("editVehicleForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
+function setupFormSubmit() {
+    const form = document.getElementById("editVehicleForm");
+    if (!form) return;
 
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
-    submitBtn.disabled = true;
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+        submitBtn.disabled = true;
 
-    try {
-        const formData = new FormData();
-        formData.append("_method", "PUT");
-        formData.append("id", vehicleId);
-        formData.append("marca", document.getElementById("marca").value);
-        formData.append("modelo", document.getElementById("modelo").value);
-        formData.append("ano", document.getElementById("ano").value);
-        formData.append("km", document.getElementById("km").value);
-        formData.append("preco", document.getElementById("preco").value);
-        formData.append("status", document.getElementById("status").value);
-        formData.append("destaque", document.getElementById("destaque").value);
-        formData.append("descricao", document.getElementById("descricao").value);
+        try {
+            const formData = new FormData();
+            formData.append("_method", "PUT");
+            formData.append("id", vehicleId);
+            
+            const fields = ['marca', 'modelo', 'ano', 'km', 'preco', 'status', 'destaque', 'categoria', 'combustivel', 'cambio', 'descricao'];
+            fields.forEach(field => {
+                const element = document.getElementById(field);
+                if (element) {
+                    formData.append(field, element.value);
+                }
+            });
 
-        if (document.getElementById("status").value === "sold") {
-            formData.append("data_compra", document.getElementById("data_compra").value);
+            if (document.getElementById("status").value === "sold") {
+                const dataCompra = document.getElementById("data_compra").value;
+                formData.append("data_compra", dataCompra || new Date().toISOString().split('T')[0]);
+            }
+
+            removedImages.forEach(img => {
+                if (img) formData.append("removed_images[]", img);
+            });
+            
+            newImages.forEach(file => {
+                formData.append("images[]", file);
+            });
+
+            const res = await fetch(API_URL, {
+                method: "POST",
+                body: formData,
+                credentials: 'include'
+            });
+
+            if (res.status === 401) {
+                throw new Error('Não autorizado');
+            }
+
+            const data = await handleApiResponse(res);
+
+            if (data.success) {
+                alert("Veículo atualizado com sucesso!");
+                window.location.href = "estoque.html";
+            } else {
+                throw new Error(data.message || "Erro ao atualizar veículo");
+            }
+        } catch (error) {
+            console.error("Erro:", error);
+            
+            if (error.message.includes('Não autorizado')) {
+                alert("Acesso restrito a administradores. Faça login como administrador.");
+                window.location.href = '../../html/login.html';
+            } else {
+                alert("Erro ao atualizar veículo: " + error.message);
+            }
+        } finally {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
         }
+    });
+}
 
-        removedImages.forEach(img => formData.append("removed_images[]", img));
-        newImages.forEach(file => formData.append("images[]", file));
+// ===============================
+// INICIALIZAÇÃO
+// ===============================
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Página editar_estoque carregada');
 
-        const res = await fetch(API_URL, {
-            method: "POST",
-            body: formData
+    const statusElement = document.getElementById("status");
+    if (statusElement) {
+        statusElement.addEventListener("change", function() {
+            togglePurchaseDate(this.value);
         });
-
-        const data = await res.json();
-
-        if (data.success) {
-            alert("Veículo atualizado com sucesso!");
-            window.location.href = "estoque.html";
-        } else {
-            throw new Error(data.message || "Erro ao atualizar veículo");
-        }
-    } catch (error) {
-        alert("Erro ao atualizar veículo: " + error.message);
-    } finally {
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
     }
+
+    setupFileUpload();
+    setupFormSubmit();
+    loadVehicleData();
 });

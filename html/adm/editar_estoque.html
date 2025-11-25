@@ -63,9 +63,39 @@
                     </div>
 
                     <div class="form-row">
-                        <div class="form-group" id="purchaseDateGroup" style="display: none;">
-                            <label>Data da Compra</label>
-                            <input type="date" id="data_compra">
+                        <div class="form-group">
+                            <label>Categoria</label>
+                            <select id="categoria">
+                                <option value="">Selecione</option>
+                                <option value="carros_eletricos">Carros Elétricos</option>
+                                <option value="hatches">Hatches</option>
+                                <option value="picapes">Picapes</option>
+                                <option value="carros_economicos">Carros Econômicos</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Tipo de Combustível</label>
+                            <select id="combustivel">
+                                <option value="">Selecione</option>
+                                <option value="gasolina">Gasolina</option>
+                                <option value="alcool">Álcool</option>
+                                <option value="flex">Flex</option>
+                                <option value="diesel">Diesel</option>
+                                <option value="eletrico">Elétrico</option>
+                                <option value="hibrido">Híbrido</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Câmbio</label>
+                            <select id="cambio">
+                                <option value="">Selecione</option>
+                                <option value="manual">Manual</option>
+                                <option value="automatico">Automático</option>
+                            </select>
                         </div>
 
                         <div class="form-group">
@@ -74,6 +104,13 @@
                                 <option value="nao">Não</option>
                                 <option value="sim">Sim</option>
                             </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group" id="purchaseDateGroup" style="display: none;">
+                            <label>Data da Compra</label>
+                            <input type="date" id="data_compra">
                         </div>
                     </div>
 

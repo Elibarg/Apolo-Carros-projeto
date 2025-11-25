@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Adicionar Veículo | Apolo Carros Admin</title>
-
     <link rel="stylesheet" href="../../css/style.css">
     <link rel="stylesheet" href="../../css/admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -14,37 +13,48 @@
 </head>
 
 <body>
-
     <nav></nav>
     <header></header>
 
     <div class="admin-container">
         <main class="admin-main">
-
             <div class="admin-content">
                 <form id="addVehicleForm" class="card vehicle-form">
-
+                    <h2>Adicionar Veículo</h2>
+                    
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Modelo</label>
-                            <input type="text" id="model" required>
+                            <label>Marca</label>
+                            <input type="text" id="marca" required placeholder="Ex: Chevrolet, Ford, etc.">
                         </div>
 
                         <div class="form-group">
-                            <label>Ano</label>
-                            <input type="number" id="year" required>
+                            <label>Modelo</label>
+                            <input type="text" id="modelo" required placeholder="Ex: Onix, Fiesta, etc.">
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
+                            <label>Ano</label>
+                            <input type="number" id="ano" required min="1900" max="2030" placeholder="Ex: 2023">
+                        </div>
+
+                        <div class="form-group">
                             <label>Quilometragem</label>
-                            <input type="number" id="km" required>
+                            <input type="number" id="km" required min="0" placeholder="Ex: 50000">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Preço (R$)</label>
+                            <input type="number" id="preco" step="0.01" required min="0" placeholder="Ex: 45000.00">
                         </div>
 
                         <div class="form-group">
                             <label>Status</label>
-                            <select id="status">
+                            <select id="status" required>
                                 <option value="available">Disponível</option>
                                 <option value="reserved">Reservado</option>
                                 <option value="sold">Vendido</option>
@@ -54,31 +64,72 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Preço (R$)</label>
-                            <input type="number" id="price" required>
+                            <label>Categoria</label>
+                            <select id="categoria" required>
+                                <option value="">Selecione</option>
+                                <option value="carros_eletricos">Carros Elétricos</option>
+                                <option value="hatches">Hatches</option>
+                                <option value="picapes">Picapes</option>
+                                <option value="carros_economicos">Carros Econômicos</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Tipo de Combustível</label>
+                            <select id="combustivel" required>
+                                <option value="">Selecione</option>
+                                <option value="gasolina">Gasolina</option>
+                                <option value="alcool">Álcool</option>
+                                <option value="flex">Flex</option>
+                                <option value="diesel">Diesel</option>
+                                <option value="eletrico">Elétrico</option>
+                                <option value="hibrido">Híbrido</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Câmbio</label>
+                            <select id="cambio" required>
+                                <option value="">Selecione</option>
+                                <option value="manual">Manual</option>
+                                <option value="automatico">Automático</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Destaque</label>
+                            <select id="destaque">
+                                <option value="nao">Não</option>
+                                <option value="sim">Sim</option>
+                            </select>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label>Fotos do Veículo</label>
+                        <label>Descrição</label>
+                        <textarea id="descricao" rows="4" placeholder="Descreva o veículo..."></textarea>
+                    </div>
 
+                    <div class="form-group">
+                        <label>Fotos do Veículo</label>
                         <div id="imageGrid" class="image-upload-grid">
                             <div class="upload-new">
                                 <i class="fas fa-plus"></i>
                                 <span>Adicionar foto</span>
-                                <input type="file" id="imageInput" accept="image/*">
+                                <input type="file" id="imageInput" accept="image/*" multiple>
                             </div>
                         </div>
+                        <small class="form-help">Adicione até 12 fotos. A primeira foto será a principal.</small>
                     </div>
 
                     <div class="form-actions">
                         <button type="button" class="btn btn-outline" onclick="window.history.back()">Cancelar</button>
                         <button type="submit" class="btn btn-primary">Adicionar Veículo</button>
                     </div>
-
                 </form>
             </div>
-
         </main>
     </div>
 
