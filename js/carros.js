@@ -1,4 +1,3 @@
-// js/carros.js
 class CarListing {
     constructor() {
         this.API_URL = "../backend/api/vehicles.php";
@@ -22,7 +21,7 @@ class CarListing {
         try {
             const response = await fetch(`${this.API_URL}?limit=100`);
             const data = await response.json();
-            
+
             if (data.success) {
                 const brands = [...new Set(data.data.vehicles.map(car => car.marca))];
                 this.populateBrandFilter(brands);
@@ -34,11 +33,10 @@ class CarListing {
 
     populateBrandFilter(brands) {
         const brandSelect = this.filters.brand;
-        // Limpar opções existentes (exceto "Todas")
         while (brandSelect.children.length > 1) {
             brandSelect.removeChild(brandSelect.lastChild);
         }
-        
+
         brands.forEach(brand => {
             if (brand) {
                 const option = document.createElement('option');
@@ -52,31 +50,36 @@ class CarListing {
     async loadCars(filters = {}) {
         try {
             this.showLoading();
-            
+
             let url = this.API_URL + '?';
             const params = new URLSearchParams();
-            
+
+            // Marca
             if (filters.brand && filters.brand !== 'all') {
                 params.append('marca', filters.brand);
             }
+
+            // Status / condição
             if (filters.condition && filters.condition !== 'all') {
-                // Mapear condições para status
                 const statusMap = {
-                    'used': 'available',
-                    'new': 'available',
-                    'inspected': 'available',
-                    'sold': 'sold'
+                    'sold': 'sold',
+                    'available': 'available',
+                    'reserved': 'reserved'
                 };
                 params.append('status', statusMap[filters.condition] || filters.condition);
+            } else {
+                // ❗ Padrão: não mostrar carros vendidos
+                params.append('status', 'available,reserved');
             }
+
+            // Preço
             if (filters.price && filters.price !== 'all') {
                 const [min, max] = this.parsePriceRange(filters.price);
                 if (min !== null) params.append('preco_min', min);
                 if (max !== null) params.append('preco_max', max);
             }
-            
+
             url += params.toString();
-            
             const response = await fetch(url);
             const data = await response.json();
 
@@ -95,16 +98,11 @@ class CarListing {
 
     parsePriceRange(priceRange) {
         switch (priceRange) {
-            case '0-50000':
-                return [0, 50000];
-            case '50000-100000':
-                return [50000, 100000];
-            case '100000-150000':
-                return [100000, 150000];
-            case '150000+':
-                return [150000, null];
-            default:
-                return [null, null];
+            case '0-50000': return [0, 50000];
+            case '50000-100000': return [50000, 100000];
+            case '100000-150000': return [100000, 150000];
+            case '150000+': return [150000, null];
+            default: return [null, null];
         }
     }
 
@@ -160,7 +158,6 @@ class CarListing {
     }
 
     setupEventListeners() {
-        // Filtros
         Object.values(this.filters).forEach(select => {
             if (select) {
                 select.addEventListener('change', () => this.applyFilters());
@@ -214,9 +211,7 @@ class CarListing {
         }
     }
 
-    hideLoading() {
-        // Loading será substituído quando os carros forem carregados
-    }
+    hideLoading() {}
 
     showError(message) {
         if (this.carGrid) {
@@ -231,7 +226,6 @@ class CarListing {
     }
 }
 
-// Inicializar quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', function() {
     new CarListing();
 });

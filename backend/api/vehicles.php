@@ -18,7 +18,7 @@ $vehicle = new Vehicle($db);
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-// ============== GET POR ID ===================
+// ==================== GET POR ID ====================
 if ($method === 'GET' && isset($_GET['id'])) {
     $id = intval($_GET['id']);
     $data = $vehicle->getById($id);
@@ -28,27 +28,89 @@ if ($method === 'GET' && isset($_GET['id'])) {
         exit;
     }
 
-    if (!empty($data['images'])) {
-        $data['images'] = json_decode($data['images'], true);
-    } else {
-        $data['images'] = [];
-    }
+    $data['images'] = !empty($data['images']) ? json_decode($data['images'], true) : [];
 
     echo json_encode(['success' => true, 'data' => $data]);
     exit;
 }
 
-// ============== LISTAR (PAGE, LIMIT) ===================
+// ==================== LISTAGEM COM FILTROS ====================
 if ($method === 'GET') {
     $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
-    $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 10;
+    $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 12;
     $start = ($page - 1) * $limit;
 
-    $vehicles = $vehicle->getAll($start, $limit);
-    $total = $vehicle->countAll();
+    $extraFilters = " WHERE ativo = 1 ";
+    $params = [];
+
+    // 🔹 Filtro por DESTAQUE (e remover veículos vendidos)
+    if (isset($_GET['destaque']) && $_GET['destaque'] === 'sim') {
+        $extraFilters .= " AND destaque = 'sim' AND status != 'sold' ";
+    }
+
+    // 🔹 Filtro por marca
+    if (isset($_GET['marca']) && !empty($_GET['marca'])) {
+        $extraFilters .= " AND marca = :marca ";
+        $params[':marca'] = $_GET['marca'];
+    }
+
+    // 🔹 Filtro por status (pode vir múltiplos → available,reserved)
+    if (isset($_GET['status'])) {
+        $statuses = explode(',', $_GET['status']);
+        $placeholders = implode(',', array_fill(0, count($statuses), '?'));
+        $extraFilters .= " AND status IN ($placeholders) ";
+    }
+
+    // 🔹 Filtro por faixa de preço
+    if (isset($_GET['preco_min'])) {
+        $extraFilters .= " AND preco >= :preco_min ";
+        $params[':preco_min'] = $_GET['preco_min'];
+    }
+    if (isset($_GET['preco_max'])) {
+        $extraFilters .= " AND preco <= :preco_max ";
+        $params[':preco_max'] = $_GET['preco_max'];
+    }
+
+    // ========== EXECUTAR CONSULTA ==========
+    $query = "SELECT * FROM veiculos {$extraFilters} 
+              ORDER BY data_cadastro DESC
+              LIMIT :start, :limit";
+
+    $stmt = $db->prepare($query);
+
+    foreach ($params as $key => $value) {
+        $stmt->bindValue($key, $value);
+    }
+
+    if (isset($statuses)) {
+        foreach ($statuses as $k => $s) {
+            $stmt->bindValue($k + 1, $s);
+        }
+    }
+
+    $stmt->bindValue(':start', $start, PDO::PARAM_INT);
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->execute();
+    $vehicles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Contagem total
+    $countQuery = "SELECT COUNT(*) FROM veiculos {$extraFilters}";
+    $countStmt = $db->prepare($countQuery);
+
+    foreach ($params as $key => $value) {
+        $countStmt->bindValue($key, $value);
+    }
+    if (isset($statuses)) {
+        foreach ($statuses as $k => $s) {
+            $countStmt->bindValue($k + 1, $s);
+        }
+    }
+
+    $countStmt->execute();
+    $total = $countStmt->fetchColumn();
 
     foreach ($vehicles as &$v) {
-        $v['images'] = json_decode($v['images'] ?? '[]', true);
+        $v['images'] = !empty($v['images']) ? json_decode($v['images'], true) : [];
     }
 
     echo json_encode([
@@ -65,7 +127,7 @@ if ($method === 'GET') {
     exit;
 }
 
-// ============== DELETE ===================
+// ==================== DELETE ====================
 if ($method === 'DELETE' && isset($_GET['id'])) {
     $id = intval($_GET['id']);
     if ($vehicle->delete($id)) {
@@ -76,20 +138,22 @@ if ($method === 'DELETE' && isset($_GET['id'])) {
     exit;
 }
 
-// ============== CREATE & UPDATE ===================
+// ==================== CREATE & UPDATE ====================
 if ($method === 'POST') {
     $data = $_POST;
 
     $images = [];
     if (!empty($_FILES['images']['name'][0])) {
         foreach ($_FILES['images']['tmp_name'] as $key => $tmpName) {
-            $fileName = 'veh_' . uniqid() . '.' . pathinfo($_FILES['images']['name'][$key], PATHINFO_EXTENSION);
+            $ext = pathinfo($_FILES['images']['name'][$key], PATHINFO_EXTENSION);
+            $fileName = 'veh_' . uniqid() . '.' . $ext;
             $targetPath = "../../img/vehicles/" . $fileName;
             move_uploaded_file($tmpName, $targetPath);
             $images[] = "/Apolo-Carros-projeto/img/vehicles/" . $fileName;
         }
     }
 
+    // ======= ATUALIZAÇÃO =======
     if (isset($data['_method']) && $data['_method'] === 'PUT') {
         $existing = $vehicle->getById($data['id']);
         $existingImages = json_decode($existing['images'] ?? '[]', true);
@@ -100,15 +164,16 @@ if ($method === 'POST') {
             }
         }
 
-        $finalImages = array_merge($existingImages, $images);
-        $data['images'] = json_encode(array_unique($finalImages));
+        $data['images'] = json_encode(array_unique(array_merge($existingImages, $images)));
 
         if ($vehicle->update($data)) {
             echo json_encode(['success' => true, 'message' => 'Veículo atualizado com sucesso']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Erro ao atualizar veículo']);
         }
-    } else {
+    }
+    // ======= CRIAÇÃO =======
+    else {
         $data['images'] = json_encode($images);
         if ($vehicle->create($data)) {
             echo json_encode(['success' => true, 'message' => 'Veículo criado com sucesso']);
@@ -119,4 +184,5 @@ if ($method === 'POST') {
     exit;
 }
 
+// ==================== MÉTODO INVÁLIDO ====================
 echo json_encode(['success' => false, 'message' => 'Método não suportado']);
