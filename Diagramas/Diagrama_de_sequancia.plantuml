@@ -1,0 +1,41 @@
+@startuml
+actor Usuario as User
+participant "Frontend" as FE
+participant "VehicleController" as VC
+participant "VehicleService" as VS
+participant "VehicleRepository" as VR
+participant "GaleriaService" as GS
+participant "ImageRepository" as IR
+participant "FavoritoService" as FS
+
+User -> FE: Acessa página detalhes veículo\n(id=123)
+FE -> VC: GET /api/vehicles/123
+VC -> VS: buscarDetalhesVeiculo(123)
+VS -> VR: findById(123)
+VR --> VS: Veiculo
+VS --> VC: Veiculo
+VC -> GS: carregarImagensVeiculo(123)
+GS -> IR: findByVehicleId(123)
+IR --> GS: List<Imagem>
+GS --> VC: List<Imagem>
+VC --> FE: JSON {veiculo, imagens}
+
+FE -> FE: renderizarPaginaDetalhes()
+FE -> FE: configurarEventListeners()
+FE -> FE: preloadImagens()
+
+User -> FE: Clica em miniatura imagem
+FE -> FE: trocarImagemPrincipal(src)
+
+User -> FE: Clica em "Favoritar"
+FE -> FS: adicionarFavorito(usuarioId, 123)
+FS --> FE: true
+FE -> FE: mostrarFeedback("Adicionado aos favoritos!")
+
+User -> FE: Clica em "Compartilhar"
+FE -> FE: navigator.share() ou copiarLink()
+
+User -> FE: Usa teclas seta esq/dir
+FE -> FE: navegarGaleriaTeclado()
+
+@enduml

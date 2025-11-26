@@ -1,0 +1,219 @@
+@startuml
+skinparam groupInheritance 2
+
+entity "pessoas" {
+  *id : INT <<PK>>
+  --
+  *nome_completo : VARCHAR(255)
+  *cpf : VARCHAR(14) <<UNIQUE>>
+  telefone : VARCHAR(20)
+  data_nascimento : DATE
+  genero : ENUM('M','F','O')
+  *ativo : BOOLEAN
+  data_cadastro : DATETIME
+  data_atualizacao : DATETIME
+}
+
+entity "usuarios" {
+  *id : INT <<PK>> <<FK>>
+  --
+  *email : VARCHAR(255) <<UNIQUE>>
+  *senha : VARCHAR(255)
+  *tipo_usuario : ENUM('cliente','admin','vendedor')
+  ultimo_login : DATETIME
+  email_verificado : BOOLEAN
+}
+
+entity "enderecos" {
+  *id : INT <<PK>>
+  *usuario_id : INT <<FK>>
+  --
+  *cep : VARCHAR(10)
+  *logradouro : VARCHAR(255)
+  numero : VARCHAR(10)
+  complemento : VARCHAR(100)
+  *bairro : VARCHAR(100)
+  *cidade : VARCHAR(100)
+  *estado : VARCHAR(2)
+  *principal : BOOLEAN
+}
+
+entity "veiculos" {
+  *id : INT <<PK>>
+  *usuario_id : INT <<FK>>
+  --
+  *marca : VARCHAR(100)
+  *modelo : VARCHAR(100)
+  *ano : INT
+  *ano_modelo : INT
+  *preco : DECIMAL(12,2)
+  *quilometragem : INT
+  *combustivel : ENUM('gasolina','etanol','diesel','flex','eletrico','hibrido')
+  *cambio : ENUM('manual','automatico','semi-automatico')
+  *cor : VARCHAR(50)
+  *portas : INT
+  *final_placa : INT
+  carroceria : ENUM('hatch','sedan','suv','pickup','minivan','coupe')
+  *status : ENUM('disponivel','reservado','vendido')
+  *destaque : BOOLEAN
+  descricao : TEXT
+  *data_cadastro : DATETIME
+  data_atualizacao : DATETIME
+}
+
+entity "veiculo_imagens" {
+  *id : INT <<PK>>
+  *veiculo_id : INT <<FK>>
+  --
+  *url : VARCHAR(500)
+  *ordem : INT
+  legenda : VARCHAR(255)
+  *principal : BOOLEAN
+  data_upload : DATETIME
+}
+
+entity "categorias" {
+  *id : INT <<PK>>
+  --
+  *nome : VARCHAR(100)
+  descricao : TEXT
+  *ativo : BOOLEAN
+  data_cadastro : DATETIME
+}
+
+entity "veiculo_categorias" {
+  *veiculo_id : INT <<PK>> <<FK>>
+  *categoria_id : INT <<PK>> <<FK>>
+  --
+  data_associacao : DATETIME
+}
+
+entity "anuncios" {
+  *id : INT <<PK>>
+  *veiculo_id : INT <<FK>>
+  *usuario_id : INT <<FK>>
+  --
+  *titulo : VARCHAR(255)
+  descricao : TEXT
+  *preco : DECIMAL(12,2)
+  *estado_anuncio : ENUM('rascunho','publicado','pausado','vendido','expirado')
+  *data_publicacao : DATETIME
+  data_edicao : DATETIME
+  data_expiracao : DATETIME
+  visualizacoes : INT
+  contatos : INT
+}
+
+entity "favoritos" {
+  *id : INT <<PK>>
+  *usuario_id : INT <<FK>>
+  *veiculo_id : INT <<FK>>
+  --
+  *data_adicao : DATETIME
+}
+
+entity "financiamentos" {
+  *id : INT <<PK>>
+  *usuario_id : INT <<FK>>
+  *veiculo_id : INT <<FK>>
+  --
+  *valor_veiculo : DECIMAL(12,2)
+  *valor_entrada : DECIMAL(12,2)
+  *prazo_meses : INT
+  *taxa_juros : DECIMAL(5,2)
+  *valor_parcela : DECIMAL(10,2)
+  *status : ENUM('simulacao','contatado','aprovado','rejeitado')
+  *data_simulacao : DATETIME
+  data_contato : DATETIME
+  data_resposta : DATETIME
+}
+
+entity "contatos_consultores" {
+  *id : INT <<PK>>
+  *financiamento_id : INT <<FK>>
+  --
+  *nome_consultor : VARCHAR(255)
+  *telefone : VARCHAR(20)
+  *email : VARCHAR(255)
+  *data_contato : DATETIME
+  observacoes : TEXT
+}
+
+entity "notificacoes" {
+  *id : INT <<PK>>
+  *usuario_id : INT <<FK>>
+  --
+  *titulo : VARCHAR(255)
+  *mensagem : TEXT
+  *tipo : ENUM('sistema','promocao','favorito','anuncio','financiamento')
+  *lida : BOOLEAN
+  *data_envio : DATETIME
+  data_leitura : DATETIME
+  url_acao : VARCHAR(500)
+}
+
+entity "visualizacoes_veiculos" {
+  *id : INT <<PK>>
+  *veiculo_id : INT <<FK>>
+  usuario_id : INT <<FK>>
+  --
+  *data_visualizacao : DATETIME
+  ip_address : VARCHAR(45)
+  user_agent : TEXT
+  tempo_permanencia : INT
+}
+
+entity "historico_precos" {
+  *id : INT <<PK>>
+  *veiculo_id : INT <<FK>>
+  --
+  *preco_antigo : DECIMAL(12,2)
+  *preco_novo : DECIMAL(12,2)
+  *data_alteracao : DATETIME
+  motivo : VARCHAR(255)
+  usuario_alteracao : INT <<FK>>
+}
+
+' ========== RELACIONAMENTOS ==========
+
+pessoas ||--|| usuarios : "1:1"
+usuarios ||--o{ enderecos : "1:N"
+usuarios ||--o{ veiculos : "1:N"
+usuarios ||--o{ anuncios : "1:N"
+usuarios ||--o{ favoritos : "1:N"
+usuarios ||--o{ financiamentos : "1:N"
+usuarios ||--o{ notificacoes : "1:N"
+
+veiculos ||--o{ veiculo_imagens : "1:N"
+veiculos ||--o{ anuncios : "1:1"
+veiculos }o--o{ categorias : "N:M" via veiculo_categorias
+veiculos ||--o{ favoritos : "1:N"
+veiculos ||--o{ financiamentos : "1:N"
+veiculos ||--o{ visualizacoes_veiculos : "1:N"
+veiculos ||--o{ historico_precos : "1:N"
+
+financiamentos ||--o{ contatos_consultores : "1:N"
+
+' ========== NOTAS E LEGENDAS ==========
+
+note top of veiculo_imagens
+  **Galeria de Imagens**
+  - ordem: controle de exibição
+  - principal: imagem destaque
+  - url: caminho CDN/local
+end note
+
+note right of favoritos
+  **Sistema de Favoritos**
+  - Relacionamento usuário-veículo
+  - Data de adição para ordenação
+end note
+
+note bottom of financiamentos
+  **Simulação de Financiamento**
+  - Cálculo de parcelas
+  - Acompanhamento status
+  - Contato com consultores
+end note
+
+@enduml

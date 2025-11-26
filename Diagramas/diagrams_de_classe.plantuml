@@ -56,12 +56,16 @@ package "domain.entities" {
     +cor: string
     +descricao: string
     +status: string
+    +quilometragem: int
+    +destaque: boolean
+    +data_cadastro: datetime
   }
   
   class Imagem {
     +id: int
     +veiculo_id: int
     +url: string
+    +ordem: int
     +uploadImagem(): boolean
   }
 
@@ -92,6 +96,30 @@ package "domain.entities" {
   }
 
   Cliente "1" -- "0..*" Anuncio
+
+  class Favorito {
+    +id: int
+    +usuario_id: int
+    +veiculo_id: int
+    +data_adicao: datetime
+    +adicionarFavorito(): boolean
+    +removerFavorito(): boolean
+  }
+
+  Cliente "1" -- "0..*" Favorito
+  Veiculo "1" -- "0..*" Favorito
+
+  class Notificacao {
+    +id: int
+    +usuario_id: int
+    +titulo: string
+    +mensagem: string
+    +lida: boolean
+    +data_envio: datetime
+    +marcarComoLida(): void
+  }
+
+  Usuario "1" -- "0..*" Notificacao
 }
 
 ' =================== REPOSITORIES ===================
@@ -107,11 +135,15 @@ package "repositories" {
   class VehicleRepository
   class AnuncioRepository
   class ImageRepository
+  class FavoritoRepository
+  class NotificacaoRepository
   
   IRepository <|.. UserRepository
   IRepository <|.. VehicleRepository
   IRepository <|.. AnuncioRepository
   IRepository <|.. ImageRepository
+  IRepository <|.. FavoritoRepository
+  IRepository <|.. NotificacaoRepository
 }
 
 ' =================== SERVICES ===================
@@ -124,6 +156,7 @@ package "services" {
   class VehicleService {
     +cadastrarVeiculo(): boolean
     +listarVeiculos(): List<Veiculo>
+    +buscarDetalhesVeiculo(id: int): Veiculo
   }
 
   class AnuncioService {
@@ -136,10 +169,23 @@ package "services" {
     +removerVeiculo(): boolean
   }
 
+  class GaleriaService {
+    +carregarImagensVeiculo(veiculoId: int): List<Imagem>
+    +adicionarImagem(veiculoId: int, imagem: Imagem): boolean
+  }
+
+  class FavoritoService {
+    +adicionarFavorito(usuarioId: int, veiculoId: int): boolean
+    +removerFavorito(usuarioId: int, veiculoId: int): boolean
+    +listarFavoritos(usuarioId: int): List<Veiculo>
+  }
+
   UserService --> UserRepository
   VehicleService --> VehicleRepository
   AnuncioService --> AnuncioRepository
   CatalogoService --> VehicleRepository
+  GaleriaService --> ImageRepository
+  FavoritoService --> FavoritoRepository
 }
 
 ' =================== CONTROLLERS/API ===================
@@ -152,11 +198,23 @@ package "api.controllers" {
   class VehicleController {
     +listarVeiculos(): List<Veiculo>
     +salvarVeiculo(): boolean
+    +detalhesVeiculo(id: int): Veiculo
   }
 
   class AnuncioController {
     +listarAnuncios(): List<Anuncio>
     +salvarAnuncio(): boolean
+  }
+
+  class GaleriaController {
+    +carregarGaleria(veiculoId: int): List<Imagem>
+    +uploadImagem(veiculoId: int, imagem: File): boolean
+  }
+
+  class FavoritoController {
+    +adicionarFavorito(veiculoId: int): boolean
+    +removerFavorito(veiculoId: int): boolean
+    +listarFavoritos(): List<Veiculo>
   }
 
   class ApiGateway
@@ -165,10 +223,14 @@ package "api.controllers" {
 ApiGateway --> UserController
 ApiGateway --> VehicleController
 ApiGateway --> AnuncioController
+ApiGateway --> GaleriaController
+ApiGateway --> FavoritoController
 
 UserController --> UserService
 VehicleController --> VehicleService
 AnuncioController --> AnuncioService
+GaleriaController --> GaleriaService
+FavoritoController --> FavoritoService
 
 ' =================== UTILS ===================
 package "utils" {
@@ -185,6 +247,12 @@ package "utils" {
   class ImageProcessor {
     +compressImage(): string
     +resizeImage(): string
+    +generateThumbnail(): string
+  }
+
+  class FinanceCalculator {
+    +calcularParcelas(valor: decimal, entrada: decimal, meses: int): List<Parcela>
+    +calcularJuros(valor: decimal, taxa: decimal): decimal
   }
 }
 
@@ -192,6 +260,8 @@ package "utils" {
 AuthService --> UserRepository
 AuthService --> SessionManager
 VehicleService --> ImageProcessor
+GaleriaService --> ImageProcessor
 NotificacaoService ..> Usuario
+VehicleController --> FinanceCalculator
 
 @enduml
