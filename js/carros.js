@@ -1,6 +1,6 @@
 class CarListing {
     constructor() {
-        this.API_URL = "../backend/api/vehicles.php";
+        this.API_URL = "../backend/api/carros_api.php";
         this.carGrid = document.querySelector('.car-grid');
         this.filters = {
             condition: document.getElementById('condition'),
