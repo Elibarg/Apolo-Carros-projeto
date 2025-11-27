@@ -45,14 +45,35 @@ try {
         exit;
     }
 
+    // Validar formato do email
+    if (!filter_var($data->email, FILTER_VALIDATE_EMAIL)) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Formato de email inválido"]);
+        exit;
+    }
+
     $user->nome_completo = $data->nome_completo;
     $user->email = $data->email;
     $user->senha = $data->senha;
+
+    // ✅ ACEITAR CPF SE ENVIADO (campo opcional)
+    if (!empty($data->cpf)) {
+        $user->cpf = preg_replace('/[^0-9]/', '', $data->cpf);
+    } else {
+        $user->cpf = null;
+    }
 
     // Verificar se email já existe
     if ($user->emailExists()) {
         http_response_code(400);
         echo json_encode(["success" => false, "message" => "Email já cadastrado"]);
+        exit;
+    }
+
+    // ✅ VERIFICAR SE CPF JÁ EXISTE (se foi enviado)
+    if (!empty($user->cpf) && $user->cpfExists()) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "CPF já cadastrado"]);
         exit;
     }
 
@@ -65,7 +86,9 @@ try {
             "data" => [
                 "id" => $user->id,
                 "nome_completo" => $user->nome_completo,
-                "email" => $user->email
+                "email" => $user->email,
+                "cpf" => $user->cpf,
+                "tipo_usuario" => $user->tipo_usuario
             ]
         ]);
     } else {

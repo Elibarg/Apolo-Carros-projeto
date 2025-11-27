@@ -111,7 +111,7 @@ class AuthService {
             if (result.redirect) {
                 window.location.href = result.redirect;
             } else {
-                window.location.href = '/Apolo-Carros-projeto/html/index.html';
+                window.location.href = '/Apolo-Carros-projeto/html/usuario/usuario.html';
             }
             
             return result;
@@ -123,7 +123,7 @@ class AuthService {
             this.clearUserData();
             
             // ✅ REDIRECIONAR MESMO COM ERRO
-            window.location.href = '/Apolo-Carros-projeto/html/index.html';
+            window.location.href = '/Apolo-Carros-projeto/html/usuario/usuario.html';
             
             return { 
                 success: false, 
@@ -184,7 +184,7 @@ class AuthService {
         
         if (!this.isAdmin()) {
             alert('Acesso restrito a administradores.');
-            window.location.href = '/Apolo-Carros-projeto/html/index.html';
+            window.location.href = '/Apolo-Carros-projeto/html/usuario/usuario.html';
             return false;
         }
         
@@ -214,7 +214,7 @@ class AuthService {
             if (userData.tipo_usuario === 'admin') {
                 window.location.href = '/Apolo-Carros-projeto/html/adm/painel_de_vendas.html';
             } else {
-                window.location.href = '/Apolo-Carros-projeto/html/index.html';
+                window.location.href = '/Apolo-Carros-projeto/html/usuario/usuario.html';
             }
         }
     }

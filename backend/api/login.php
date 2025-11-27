@@ -39,7 +39,7 @@ if(!empty($data->email) && !empty($data->senha)) {
         // Redirecionamento
         $redirectTo = $user->tipo_usuario === 'admin' 
             ? "{$protocol}://{$host}{$base_path}/html/adm/painel_de_vendas.html" 
-            : "{$protocol}://{$host}{$base_path}/html/index.html";
+            : "{$protocol}://{$host}{$base_path}/html/usuario/usuario.html";
         
         http_response_code(200);
         echo json_encode(array(
