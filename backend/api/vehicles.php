@@ -17,14 +17,12 @@ $vehicle = new Vehicle($db);
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Função auxiliar para criar URL pública de imagem
+// Criar URL para retorno público das imagens
 function getImageUrl($fileName) {
-    // Caminho relativo à pasta pública do servidor
-    $baseUrl = "/Apolo-Carros-projeto/img/vehicles/";
-    return $baseUrl . $fileName;
+    return "/Apolo-Carros-projeto/img/vehicles/" . $fileName;
 }
 
-// ==================== GET POR ID ====================
+/* =================== GET POR ID ========================= */
 if ($method === 'GET' && isset($_GET['id'])) {
     $id = intval($_GET['id']);
     $data = $vehicle->getById($id);
@@ -39,7 +37,7 @@ if ($method === 'GET' && isset($_GET['id'])) {
     exit;
 }
 
-// ==================== LISTAGEM COM FILTROS ====================
+/* =================== LISTAGEM COM FILTROS ========================= */
 if ($method === 'GET') {
     $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
     $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 12;
@@ -55,11 +53,19 @@ if ($method === 'GET') {
         $extraFilters .= " AND marca = :marca ";
         $params[':marca'] = $_GET['marca'];
     }
-    if (isset($_GET['status'])) {
+
+    // 🔹 CORREÇÃO: placeholders nomeados para o filtro status
+    if (isset($_GET['status']) && !empty($_GET['status'])) {
         $statuses = explode(',', $_GET['status']);
-        $placeholders = implode(',', array_fill(0, count($statuses), '?'));
-        $extraFilters .= " AND status IN ($placeholders) ";
+        $statusPlaceholders = [];
+        foreach ($statuses as $index => $status) {
+            $placeholder = ":status$index";
+            $statusPlaceholders[] = $placeholder;
+            $params[$placeholder] = $status;
+        }
+        $extraFilters .= " AND status IN (" . implode(',', $statusPlaceholders) . ") ";
     }
+
     if (isset($_GET['preco_min'])) {
         $extraFilters .= " AND preco >= :preco_min ";
         $params[':preco_min'] = $_GET['preco_min'];
@@ -69,6 +75,7 @@ if ($method === 'GET') {
         $params[':preco_max'] = $_GET['preco_max'];
     }
 
+    // Consulta principal
     $query = "SELECT * FROM veiculos {$extraFilters} 
               ORDER BY data_cadastro DESC
               LIMIT :start, :limit";
@@ -77,30 +84,22 @@ if ($method === 'GET') {
     foreach ($params as $key => $value) {
         $stmt->bindValue($key, $value);
     }
-    if (isset($statuses)) {
-        foreach ($statuses as $k => $s) {
-            $stmt->bindValue($k + 1, $s);
-        }
-    }
     $stmt->bindValue(':start', $start, PDO::PARAM_INT);
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->execute();
     $vehicles = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Tratamento das imagens
     foreach ($vehicles as &$v) {
         $imgs = !empty($v['images']) ? json_decode($v['images'], true) : [];
         $v['images'] = array_map(fn($img) => getImageUrl(basename($img)), $imgs);
     }
 
+    // Contagem total para paginação
     $countQuery = "SELECT COUNT(*) FROM veiculos {$extraFilters}";
     $countStmt = $db->prepare($countQuery);
     foreach ($params as $key => $value) {
         $countStmt->bindValue($key, $value);
-    }
-    if (isset($statuses)) {
-        foreach ($statuses as $k => $s) {
-            $countStmt->bindValue($k + 1, $s);
-        }
     }
     $countStmt->execute();
     $total = $countStmt->fetchColumn();
@@ -119,7 +118,7 @@ if ($method === 'GET') {
     exit;
 }
 
-// ==================== DELETE ====================
+/* =================== DELETE ========================= */
 if ($method === 'DELETE' && isset($_GET['id'])) {
     $id = intval($_GET['id']);
     if ($vehicle->delete($id)) {
@@ -130,12 +129,13 @@ if ($method === 'DELETE' && isset($_GET['id'])) {
     exit;
 }
 
-// ==================== CREATE & UPDATE ====================
+/* =================== CREATE & UPDATE ========================= */
 if ($method === 'POST') {
     $data = $_POST;
-    $images = [];
 
+    $images = [];
     $uploadDir = $_SERVER['DOCUMENT_ROOT'] . "/Apolo-Carros-projeto/img/vehicles/";
+
     if (!is_dir($uploadDir)) {
         mkdir($uploadDir, 0755, true);
     }
@@ -148,13 +148,11 @@ if ($method === 'POST') {
 
             if (move_uploaded_file($tmpName, $targetPath)) {
                 $images[] = getImageUrl($fileName);
-            } else {
-                error_log("❌ Falha ao salvar imagem: $fileName");
             }
         }
     }
 
-    // ======= ATUALIZAÇÃO =======
+    // Atualização
     if (isset($data['_method']) && $data['_method'] === 'PUT') {
         $existing = $vehicle->getById($data['id']);
         $existingImages = json_decode($existing['images'] ?? '[]', true);
@@ -173,7 +171,7 @@ if ($method === 'POST') {
             echo json_encode(['success' => false, 'message' => 'Erro ao atualizar veículo']);
         }
     }
-    // ======= CRIAÇÃO =======
+    // Criação
     else {
         $data['images'] = json_encode($images);
         if ($vehicle->create($data)) {
@@ -185,5 +183,6 @@ if ($method === 'POST') {
     exit;
 }
 
-// ==================== MÉTODO INVÁLIDO ====================
+// Método inválido
 echo json_encode(['success' => false, 'message' => 'Método não suportado']);
+?>
